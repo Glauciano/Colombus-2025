@@ -11,10 +11,12 @@ export const supabase = hasCredentials
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
   : null;
 
-// Supabase só é "configurado" se tem credenciais E usuário ativou
+// Supabase ATIVO POR PADRÃO — usa nuvem ao invés de localStorage
 export const isSupabaseConfigured = () => {
   if (!hasCredentials) return false;
-  return localStorage.getItem('colombus_supabase_enabled') === 'true';
+  // Se nunca definiu, retorna true (ativo por padrão)
+  const stored = localStorage.getItem('colombus_supabase_enabled');
+  return stored === null || stored === 'true';
 };
 
 export const hasSupabaseCredentials = () => hasCredentials;
@@ -30,5 +32,7 @@ export const disableSupabase = () => {
 };
 
 export const isSupabaseEnabled = () => {
-  return localStorage.getItem('colombus_supabase_enabled') === 'true';
+  const stored = localStorage.getItem('colombus_supabase_enabled');
+  // Ativo por padrão se nunca foi definido
+  return stored === null || stored === 'true';
 };

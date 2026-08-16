@@ -16,9 +16,7 @@ const statusColors = {
   'Atrasado': 'bg-red-50 text-red-700',
 };
 
-const emptyItem = {
-  descricao: '', valor: '', data_vencimento: '', status: 'Pendente'
-};
+const emptyItem = { descricao: '', valor: '', data_vencimento: '', status: 'Pendente' };
 
 function ReceivelForm({ item, entity, onSave, onClose }) {
   const [form, setForm] = React.useState(emptyItem);
@@ -41,15 +39,8 @@ function ReceivelForm({ item, entity, onSave, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const data = {
-      ...form,
-      valor: form.valor !== '' ? Number(form.valor) : 0,
-    };
-    if (isEdit) {
-      await db.update(entity, item.id, data);
-    } else {
-      await db.create(entity, data);
-    }
+    const data = { ...form, valor: form.valor !== '' ? Number(form.valor) : 0 };
+    if (isEdit) { await db.update(entity, item.id, data); } else { await db.create(entity, data); }
     setSaving(false);
     onSave();
   };
@@ -61,28 +52,18 @@ function ReceivelForm({ item, entity, onSave, onClose }) {
         <DialogClose onClose={onClose} />
       </DialogHeader>
       <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Descrição</Label>
-            <Input value={form.descricao} onChange={e => handleChange('descricao', e.target.value)} />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5"><Label>Descrição</Label><Input value={form.descricao} onChange={e => handleChange('descricao', e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-1.5"><Label>Valor (R$)</Label><Input type="number" step="0.01" value={form.valor} onChange={e => handleChange('valor', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Data Vencimento</Label><Input type="date" value={form.data_vencimento} onChange={e => handleChange('data_vencimento', e.target.value)} /></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Valor (R$)</Label>
-              <Input type="number" step="0.01" value={form.valor} onChange={e => handleChange('valor', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Data Vencimento</Label>
-              <Input type="date" value={form.data_vencimento} onChange={e => handleChange('data_vencimento', e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Status</Label>
+          <div className="space-y-1.5"><Label>Status</Label>
             <Select value={form.status} onChange={e => handleChange('status', e.target.value)}>
               {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </Select>
           </div>
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </div>
@@ -108,16 +89,13 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFillColor(22, 80, 50);
       doc.rect(0, 0, pageWidth, 18, 'F');
-      doc.setFontSize(14);
-      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14); doc.setTextColor(255, 255, 255);
       doc.text(title, 14, 12);
       let y = 30;
       const headers = ['Descrição', 'Valor', 'Vencimento', 'Status'];
-      doc.setFontSize(9);
-      doc.setTextColor(100);
+      doc.setFontSize(9); doc.setTextColor(100);
       headers.forEach((h, i) => doc.text(h, 14 + i * 45, y));
-      y += 8;
-      doc.setTextColor(30);
+      y += 8; doc.setTextColor(30);
       sorted.forEach(item => {
         if (y > 280) { doc.addPage(); y = 20; }
         doc.text(item.descricao || '', 14, y);
@@ -138,15 +116,11 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
   return (
     <div>
       <PageHeader title={title} subtitle={subtitle}>
-        <Button variant="outline" onClick={exportPDF}>
-          <Download className="w-4 h-4 mr-1.5" /> PDF
-        </Button>
-        <Button onClick={() => setEditModal({ open: true, item: null })}>
-          <Plus className="w-4 h-4 mr-1.5" /> Novo Lançamento
-        </Button>
+        <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
+        <Button onClick={() => setEditModal({ open: true, item: null })}><Plus className="w-4 h-4 mr-2" /> Novo Lançamento</Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <StatCard icon={Wallet} label="Total" value={`R$ ${formatCurrency(totalValor)}`} />
         <StatCard icon={Wallet} label="Recebido" value={`R$ ${formatCurrency(totalPago)}`} />
         <StatCard icon={Wallet} label="Pendente" value={`R$ ${formatCurrency(totalPendente)}`} accent />
@@ -160,7 +134,7 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
               <TableHead>Valor</TableHead>
               <TableHead>Vencimento</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -176,39 +150,21 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, item })}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, item })}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => setEditModal({ open: true, item })}><Pencil className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, item })}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
             {sorted.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-[#9ca3af]">Nenhum lançamento cadastrado</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-14 text-[#9ca3af]">Nenhum lançamento cadastrado</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </Card>
 
-      {editModal.open && (
-        <ReceivelForm
-          item={editModal.item}
-          entity={entity}
-          onSave={() => { setEditModal({ open: false, item: null }); refresh(); }}
-          onClose={() => setEditModal({ open: false, item: null })}
-        />
-      )}
-      <ConfirmDelete
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false, item: null })}
-        onConfirm={handleDelete}
-        label={deleteModal.item?.descricao}
-      />
+      {editModal.open && <ReceivelForm item={editModal.item} entity={entity} onSave={() => { setEditModal({ open: false, item: null }); refresh(); }} onClose={() => setEditModal({ open: false, item: null })} />}
+      <ConfirmDelete open={deleteModal.open} onClose={() => setDeleteModal({ open: false, item: null })} onConfirm={handleDelete} label={deleteModal.item?.descricao} />
     </div>
   );
 }

@@ -149,10 +149,12 @@ export default function ImportarDados() {
       <PageHeader title="Configuração e Importação" subtitle="Conecte ao Supabase e importe dados do Base44" />
 
       {/* Supabase Connection */}
-      <Card className="mb-6">
+
+      {/* Supabase Connection */}
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-[#15803d]" />
+            <Database className="w-5 h-5 text-[#1a5c3d]" />
             Conexão Supabase
           </CardTitle>
         </CardHeader>
@@ -167,17 +169,17 @@ export default function ImportarDados() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#f6f5f3]">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#f0ede7]">
                 {isSupabaseEnabled() ? (
                   <Wifi className="w-5 h-5 text-emerald-600" />
                 ) : (
-                  <WifiOff className="w-5 h-5 text-[#677e77]" />
+                  <WifiOff className="w-5 h-5 text-[#6b8a7e]" />
                 )}
                 <div className="flex-1">
                   <p className="font-medium text-sm text-[#12211c]">
                     {isSupabaseEnabled() ? 'Supabase Ativo' : 'Usando armazenamento local'}
                   </p>
-                  <p className="text-xs text-[#677e77]">
+                  <p className="text-xs text-[#6b8a7e]">
                     {isSupabaseEnabled()
                       ? 'Dados estão sendo salvos no Supabase (nuvem)'
                       : 'Dados estão salvos no navegador (localStorage)'}
@@ -211,20 +213,20 @@ export default function ImportarDados() {
                     <AlertCircle className="w-4 h-4 text-red-600" />
                     <span className="text-sm text-red-700">Erro na conexão. Verifique se executou o SQL de correção no Supabase.</span>
                   </div>
-                  <div className="p-3 rounded-lg bg-[#f6f5f3] text-xs font-mono space-y-1">
+                  <div className="p-3 rounded-lg bg-[#f0ede7] text-xs font-mono space-y-1">
                     <p className="font-semibold text-[#12211c]">Execute este SQL no Supabase SQL Editor:</p>
-                    <p className="text-[#677e77]">ALTER TABLE provas DISABLE ROW LEVEL SECURITY;</p>
-                    <p className="text-[#677e77]">ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS valor_numero NUMERIC(10,2) DEFAULT 0;</p>
-                    <p className="text-[#677e77]">ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS valor_texto TEXT;</p>
-                    <p className="text-[#677e77] mt-1">(SQL completo no arquivo SUPABASE_FIX_SQL.md)</p>
+                    <p className="text-[#6b8a7e]">ALTER TABLE provas DISABLE ROW LEVEL SECURITY;</p>
+                    <p className="text-[#6b8a7e]">ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS valor_numero NUMERIC(10,2) DEFAULT 0;</p>
+                    <p className="text-[#6b8a7e]">ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS valor_texto TEXT;</p>
+                    <p className="text-[#6b8a7e] mt-1">(SQL completo no arquivo SUPABASE_FIX_SQL.md)</p>
                   </div>
                 </div>
               )}
 
               {isSupabaseEnabled() && pushStatus !== 'pushing' && (
-                <div className="pt-3 border-t border-[#e5e7eb]">
+                <div className="pt-3 border-t border-[#e5ddd1]">
                   <p className="text-sm font-medium text-[#12211c] mb-2">Enviar dados locais para o Supabase</p>
-                  <p className="text-xs text-[#677e77] mb-3">
+                  <p className="text-xs text-[#6b8a7e] mb-3">
                     Copia todos os dados do localStorage para as tabelas do Supabase. Use apenas na primeira vez.
                   </p>
                   <Button
@@ -251,9 +253,9 @@ export default function ImportarDados() {
                     <span className="text-sm text-emerald-700">{totalPushed} registros enviados!</span>
                   </div>
                   {Object.entries(pushResults).map(([label, result]) => (
-                    <div key={label} className="flex items-center justify-between p-2.5 rounded-lg bg-[#f6f5f3] text-sm">
+                    <div key={label} className="flex items-center justify-between p-2.5 rounded-lg bg-[#f0ede7] text-sm">
                       <span className="text-[#12211c]">{label}</span>
-                      <span className={result.status === 'ok' ? 'text-emerald-700 font-semibold' : result.status === 'skipped' ? 'text-[#677e77]' : 'text-red-600'}>
+                      <span className={result.status === 'ok' ? 'text-emerald-700 font-semibold' : result.status === 'skipped' ? 'text-[#6b8a7e]' : 'text-red-600'}>
                         {result.status === 'ok' ? `✅ ${result.count}` : result.status === 'skipped' ? '⏭️ Vazio' : `❌ ${result.msg}`}
                       </span>
                     </div>
@@ -284,7 +286,7 @@ export default function ImportarDados() {
                 {Object.entries(results).map(([entity, result]) => (
                   <div key={entity} className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50">
                     <span className="font-medium text-sm text-[#12211c]">{entity}</span>
-                    <span className={`text-sm font-semibold ${result.status === 'ok' ? 'text-emerald-700' : result.status === 'skipped' ? 'text-[#677e77]' : 'text-red-600'}`}>
+                    <span className={`text-sm font-semibold ${result.status === 'ok' ? 'text-emerald-700' : result.status === 'skipped' ? 'text-[#6b8a7e]' : 'text-red-600'}`}>
                       {result.status === 'ok' ? `✅ ${result.count} registros` :
                        result.status === 'skipped' ? '⏭️ Pulado' :
                        `❌ ${result.msg}`}
@@ -298,31 +300,31 @@ export default function ImportarDados() {
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#15803d] text-white flex items-center justify-center text-sm font-bold">1</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#1a5c3d] text-white flex items-center justify-center text-sm font-bold">1</span>
                   <div>
                     <p className="font-medium text-[#12211c]">Abra o app original</p>
-                    <p className="text-sm text-[#677e77]">
-                      Acesse <a href={BASE44_URL} target="_blank" rel="noopener noreferrer" className="text-[#15803d] underline">{BASE44_URL}</a> e faça login
+                    <p className="text-sm text-[#6b8a7e]">
+                      Acesse <a href={BASE44_URL} target="_blank" rel="noopener noreferrer" className="text-[#1a5c3d] underline">{BASE44_URL}</a> e faça login
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#15803d] text-white flex items-center justify-center text-sm font-bold">2</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#1a5c3d] text-white flex items-center justify-center text-sm font-bold">2</span>
                   <div>
                     <p className="font-medium text-[#12211c]">Abra o Console do navegador (F12) e clique na aba <strong>"Console"</strong></p>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#15803d] text-white flex items-center justify-center text-sm font-bold">3</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#1a5c3d] text-white flex items-center justify-center text-sm font-bold">3</span>
                   <div>
                     <p className="font-medium text-[#12211c]">Cole o código abaixo e aperte Enter:</p>
-                    <pre className="mt-2 p-3 rounded-lg bg-[#f6f5f3] text-xs overflow-x-auto font-mono whitespace-pre-wrap text-[#12211c]">{EXPORT_CODE}</pre>
+                    <pre className="mt-2 p-3 rounded-lg bg-[#f0ede7] text-xs overflow-x-auto font-mono whitespace-pre-wrap text-[#12211c]">{EXPORT_CODE}</pre>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#b8860b] text-white flex items-center justify-center text-sm font-bold">4</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#e5a51b] text-white flex items-center justify-center text-sm font-bold">4</span>
                   <div>
-                    <p className="font-medium text-[#12211c]">Execute <code className="px-1.5 py-0.5 rounded bg-[#f6f5f3] text-xs font-mono">copy(window.__EXPORTED)</code> no console e cole o resultado aqui:</p>
+                    <p className="font-medium text-[#12211c]">Execute <code className="px-1.5 py-0.5 rounded bg-[#f0ede7] text-xs font-mono">copy(window.__EXPORTED)</code> no console e cole o resultado aqui:</p>
                   </div>
                 </div>
               </div>
@@ -331,7 +333,7 @@ export default function ImportarDados() {
                 value={rawData}
                 onChange={e => setRawData(e.target.value)}
                 placeholder={'Cole os dados aqui... (vai começar com {"Prova": [...]})'}
-                className="w-full h-40 p-3 rounded-lg border border-[#d1d5db] bg-white text-sm font-mono placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#15803d]/20 focus:border-[#15803d] resize-y"
+                className="w-full h-40 p-3 rounded-lg border border-[#e5ddd1] bg-white text-sm font-mono placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#1a5c3d]/20 focus:border-[#1a5c3d] resize-y"
               />
 
               {error && (

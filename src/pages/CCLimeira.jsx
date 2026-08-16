@@ -46,11 +46,7 @@ function SocioForm({ socio, onSave, onClose }) {
       data[`parcela_${i}`] = parseFloat(form[`parcela_${i}`]) || 0;
       data[`pago_parcela_${i}`] = form[`pago_parcela_${i}`] || false;
     });
-    if (isEdit) {
-      await db.update(ENTITIES.SOCIO_LIMEIRA, socio.id, data);
-    } else {
-      await db.create(ENTITIES.SOCIO_LIMEIRA, data);
-    }
+    if (isEdit) { await db.update(ENTITIES.SOCIO_LIMEIRA, socio.id, data); } else { await db.create(ENTITIES.SOCIO_LIMEIRA, data); }
     setSaving(false);
     onSave();
   };
@@ -63,59 +59,29 @@ function SocioForm({ socio, onSave, onClose }) {
       </DialogHeader>
       <DialogContent>
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label>Nome</Label>
-              <Input value={form.nome} onChange={e => handleChange('nome', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Telefone</Label>
-              <Input value={form.telefone} onChange={e => handleChange('telefone', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5"><Label>Nome</Label><Input value={form.nome} onChange={e => handleChange('nome', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Telefone</Label><Input value={form.telefone} onChange={e => handleChange('telefone', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Email</Label><Input type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} /></div>
           </div>
-
           <div>
             <h4 className="text-sm font-semibold text-[#12211c] mb-3">Parcelas</h4>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {PARCELAS.map(i => (
-                <div key={i} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
-                  <span className="text-xs font-medium text-[#677e77] w-6">{i}ª</span>
-                  <Input
-                    type="number" step="0.01" placeholder="Valor"
-                    value={form[`parcela_${i}`] || ''}
-                    onChange={e => handleChange(`parcela_${i}`, e.target.value)}
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    type="date"
-                    value={form[`data_parcela_${i}`]?.slice(0, 10) || ''}
-                    onChange={e => handleChange(`data_parcela_${i}`, e.target.value)}
-                    className="h-8 text-sm"
-                  />
+                <div key={i} className="grid grid-cols-[auto_1fr_1fr_auto] gap-3 items-center">
+                  <span className="text-xs font-medium text-[#6b8a7e] w-6">{i}ª</span>
+                  <Input type="number" step="0.01" placeholder="Valor" value={form[`parcela_${i}`] || ''} onChange={e => handleChange(`parcela_${i}`, e.target.value)} className="h-9 text-sm" />
+                  <Input type="date" value={form[`data_parcela_${i}`]?.slice(0, 10) || ''} onChange={e => handleChange(`data_parcela_${i}`, e.target.value)} className="h-9 text-sm" />
                   <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form[`pago_parcela_${i}`] || false}
-                      onChange={e => handleChange(`pago_parcela_${i}`, e.target.checked)}
-                      className="accent-[#15803d] w-4 h-4"
-                    />
-                    <span className="text-xs text-[#677e77]">Pago</span>
+                    <input type="checkbox" checked={form[`pago_parcela_${i}`] || false} onChange={e => handleChange(`pago_parcela_${i}`, e.target.checked)} className="accent-[#1a5c3d] w-4 h-4" />
+                    <span className="text-xs text-[#6b8a7e]">Pago</span>
                   </label>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="space-y-1.5">
-            <Label>Observação</Label>
-            <Input value={form.observacao} onChange={e => handleChange('observacao', e.target.value)} />
-          </div>
-
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="space-y-1.5"><Label>Observação</Label><Input value={form.observacao} onChange={e => handleChange('observacao', e.target.value)} /></div>
+          <div className="flex gap-3 justify-end pt-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </div>
@@ -141,15 +107,12 @@ export default function CCLimeira() {
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFillColor(22, 80, 50);
       doc.rect(0, 0, pageWidth, 18, 'F');
-      doc.setFontSize(14);
-      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14); doc.setTextColor(255, 255, 255);
       doc.text('Conta Corrente Limeira - Sócios', 14, 12);
       let y = 30;
-      doc.setFontSize(9);
-      doc.setTextColor(100);
+      doc.setFontSize(9); doc.setTextColor(100);
       ['Nome', 'Telefone', 'Total', 'Pago', 'Pendente'].forEach((h, i) => doc.text(h, 14 + i * 50, y));
-      y += 8;
-      doc.setTextColor(30);
+      y += 8; doc.setTextColor(30);
       sorted.forEach(soc => {
         if (y > 190) { doc.addPage(); y = 20; }
         const total = getTotalParcelas(soc);
@@ -173,15 +136,11 @@ export default function CCLimeira() {
   return (
     <div>
       <PageHeader title="Conta Corrente Limeira" subtitle="Gestão de sócios e parcelas">
-        <Button variant="outline" onClick={exportPDF}>
-          <Download className="w-4 h-4 mr-1.5" /> PDF
-        </Button>
-        <Button onClick={() => setEditModal({ open: true, socio: null })}>
-          <Plus className="w-4 h-4 mr-1.5" /> Novo Sócio
-        </Button>
+        <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
+        <Button onClick={() => setEditModal({ open: true, socio: null })}><Plus className="w-4 h-4 mr-2" /> Novo Sócio</Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <StatCard icon={Users} label="Total Geral" value={`R$ ${formatCurrency(totalGeral)}`} />
         <StatCard icon={Users} label="Total Pago" value={`R$ ${formatCurrency(totalPago)}`} />
         <StatCard icon={Users} label="Total Pendente" value={`R$ ${formatCurrency(totalPendente)}`} accent />
@@ -197,7 +156,7 @@ export default function CCLimeira() {
               <TableHead>Pago</TableHead>
               <TableHead>Pendente</TableHead>
               <TableHead>Parcelas Pagas</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -212,7 +171,7 @@ export default function CCLimeira() {
                   <TableCell>{socio.telefone || '—'}</TableCell>
                   <TableCell>R$ {formatCurrency(total)}</TableCell>
                   <TableCell>R$ {formatCurrency(pago)}</TableCell>
-                  <TableCell className={total - pago > 0 ? 'text-[#dc2626] font-semibold' : 'text-[#15803d] font-semibold'}>
+                  <TableCell className={total - pago > 0 ? 'text-[#dc2626] font-semibold' : 'text-[#1a5c3d] font-semibold'}>
                     R$ {formatCurrency(total - pago)}
                   </TableCell>
                   <TableCell>
@@ -222,39 +181,22 @@ export default function CCLimeira() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, socio })}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, socio })}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => setEditModal({ open: true, socio })}><Pencil className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, socio })}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
               );
             })}
             {sorted.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-[#9ca3af]">Nenhum sócio cadastrado</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-14 text-[#9ca3af]">Nenhum sócio cadastrado</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </Card>
 
-      {editModal.open && (
-        <SocioForm
-          socio={editModal.socio}
-          onSave={() => { setEditModal({ open: false, socio: null }); refresh(); }}
-          onClose={() => setEditModal({ open: false, socio: null })}
-        />
-      )}
-      <ConfirmDelete
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false, socio: null })}
-        onConfirm={handleDelete}
-        label={deleteModal.socio?.nome}
-      />
+      {editModal.open && <SocioForm socio={editModal.socio} onSave={() => { setEditModal({ open: false, socio: null }); refresh(); }} onClose={() => setEditModal({ open: false, socio: null })} />}
+      <ConfirmDelete open={deleteModal.open} onClose={() => setDeleteModal({ open: false, socio: null })} onConfirm={handleDelete} label={deleteModal.socio?.nome} />
     </div>
   );
 }

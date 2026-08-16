@@ -55,42 +55,36 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex h-screen overflow-hidden">
-        {/* Mobile overlay */}
         {mobileOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
         )}
 
-        {/* Sidebar */}
-        <aside
-          className={`
-            fixed lg:relative z-50 h-full transition-all duration-200
-            ${collapsed ? 'w-[60px]' : 'w-[260px]'}
-            ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            flex flex-col bg-[#12211c]
-          `}
-        >
+        {/* Sidebar - exact Base44 colors */}
+        <aside className={`
+          fixed lg:relative z-50 h-full transition-all duration-200
+          ${collapsed ? 'w-[68px]' : 'w-[260px]'}
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          flex flex-col bg-[#12211c]
+        `}>
           {/* Logo */}
-          <div className="flex items-center gap-3 px-5 h-16 shrink-0 border-b border-white/[0.06]">
-            <div className="w-8 h-8 rounded-lg bg-[#15803d] flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-sm">C</span>
+          <div className="flex items-center gap-3 px-6 h-16 shrink-0 border-b border-[#2e4f3f]">
+            <div className="w-9 h-9 rounded-lg bg-[#e5a51b] flex items-center justify-center shrink-0">
+              <span className="text-[#12211c] font-bold text-base">C</span>
             </div>
             {!collapsed && (
               <div className="flex items-baseline gap-2">
-                <span className="text-base font-semibold text-[#ebe7e0] tracking-tight">Colombus</span>
-                <span className="text-xs text-[#677e77] font-medium">2025</span>
+                <span className="text-[15px] font-semibold text-[#e8e2d7] tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Colombus</span>
+                <span className="text-xs text-[#6b8a7e] font-medium">2025</span>
               </div>
             )}
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+          <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-6">
             {navSections.map((section, si) => (
               <div key={si}>
                 {section.title && !collapsed && (
-                  <p className="px-3 mb-2 text-[11px] font-semibold text-[#677e77] uppercase tracking-[0.08em]">
+                  <p className="px-3 mb-2.5 text-[11px] font-semibold text-[#6b8a7e] uppercase tracking-[0.08em]">
                     {section.title}
                   </p>
                 )}
@@ -102,10 +96,10 @@ function App() {
                       end={item.path === '/'}
                       onClick={() => setMobileOpen(false)}
                       className={({ isActive }) => `
-                        flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150
+                        flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition-all duration-150
                         ${isActive
-                          ? 'bg-[#ebe7e0] text-[#12211c] font-semibold'
-                          : 'text-[#ebe7e0]/60 hover:text-[#ebe7e0] hover:bg-white/[0.06]'
+                          ? 'bg-[#233f32] text-[#e8e2d7] font-semibold'
+                          : 'text-[#e8e2d7]/60 hover:text-[#e8e2d7] hover:bg-[#233f32]/50'
                         }
                       `}
                     >
@@ -119,10 +113,10 @@ function App() {
           </nav>
 
           {/* Collapse toggle */}
-          <div className="px-3 py-3 border-t border-white/[0.06] hidden lg:block">
+          <div className="px-4 py-3 border-t border-[#2e4f3f] hidden lg:block">
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-[#677e77] hover:text-[#ebe7e0] hover:bg-white/[0.06] w-full transition-colors"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-[#6b8a7e] hover:text-[#e8e2d7] hover:bg-[#233f32]/50 w-full transition-colors"
             >
               {collapsed
                 ? <ChevronRight className="w-4 h-4 mx-auto" />
@@ -133,34 +127,28 @@ function App() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto bg-[#fbfaf9]">
+        <main className="flex-1 overflow-y-auto bg-[#faf8f3]">
           {/* Mobile header */}
-          <div className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-[#e5e7eb] bg-white sticky top-0 z-30 shadow-sm">
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="p-2 -ml-2 rounded-lg hover:bg-[#f6f5f3] transition-colors"
-            >
-              <Menu className="w-5 h-5 text-[#677e77]" />
+          <div className="lg:hidden flex items-center gap-3 px-5 h-14 border-b border-[#e5ddd1] bg-white sticky top-0 z-30 shadow-sm">
+            <button onClick={() => setMobileOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-[#f0ede7] transition-colors">
+              <Menu className="w-5 h-5 text-[#6b8a7e]" />
             </button>
             <span className="text-sm font-semibold text-[#12211c]">Colombus 2025</span>
           </div>
 
-          {/* Page content */}
-          <div className="p-6 lg:p-8">
-            <div className="max-w-[1100px] mx-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/provas" element={<Provas />} />
-                <Route path="/venda-anilhas" element={<VendaAnilhas />} />
-                <Route path="/custos" element={<Custos />} />
-                <Route path="/custos-ribeirao" element={<CustosRibeirao />} />
-                <Route path="/custos-franca" element={<CustosFranca />} />
-                <Route path="/cc-ribeirao" element={<CCRibeirao />} />
-                <Route path="/cc-franca" element={<CCFranca />} />
-                <Route path="/cc-limeira" element={<CCLimeira />} />
-                <Route path="/importar" element={<ImportarDados />} />
-              </Routes>
-            </div>
+          <div className="p-8 lg:p-10">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/provas" element={<Provas />} />
+              <Route path="/venda-anilhas" element={<VendaAnilhas />} />
+              <Route path="/custos" element={<Custos />} />
+              <Route path="/custos-ribeirao" element={<CustosRibeirao />} />
+              <Route path="/custos-franca" element={<CustosFranca />} />
+              <Route path="/cc-ribeirao" element={<CCRibeirao />} />
+              <Route path="/cc-franca" element={<CCFranca />} />
+              <Route path="/cc-limeira" element={<CCLimeira />} />
+              <Route path="/importar" element={<ImportarDados />} />
+            </Routes>
           </div>
         </main>
       </div>

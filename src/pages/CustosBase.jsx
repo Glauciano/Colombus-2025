@@ -45,23 +45,14 @@ function CustoForm({ custo, entity, onSave, onClose }) {
     const totalGastos = num(form.combustivel) + num(form.pedagio) + num(form.motorista) + num(form.gta_ajudante) + num(form.seguro_caminhao);
     const custoTotal = totalGastos + num(form.custo_manutencoes);
     const data = {
-      cidade: form.cidade,
-      km: num(form.km),
-      combustivel: num(form.combustivel),
-      pedagio: num(form.pedagio),
-      motorista: num(form.motorista),
-      gta_ajudante: num(form.gta_ajudante),
-      seguro_caminhao: num(form.seguro_caminhao),
-      custo_manutencoes: num(form.custo_manutencoes),
-      total_gastos: totalGastos,
-      custo_total: custoTotal,
+      cidade: form.cidade, km: num(form.km),
+      combustivel: num(form.combustivel), pedagio: num(form.pedagio),
+      motorista: num(form.motorista), gta_ajudante: num(form.gta_ajudante),
+      seguro_caminhao: num(form.seguro_caminhao), custo_manutencoes: num(form.custo_manutencoes),
+      total_gastos: totalGastos, custo_total: custoTotal,
       observacao: form.observacao,
     };
-    if (isEdit) {
-      await db.update(entity, custo.id, data);
-    } else {
-      await db.create(entity, data);
-    }
+    if (isEdit) { await db.update(entity, custo.id, data); } else { await db.create(entity, data); }
     setSaving(false);
     onSave();
   };
@@ -73,46 +64,19 @@ function CustoForm({ custo, entity, onSave, onClose }) {
         <DialogClose onClose={onClose} />
       </DialogHeader>
       <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1.5">
-              <Label>Cidade</Label>
-              <Input value={form.cidade} onChange={e => handleChange('cidade', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>KM</Label>
-              <Input type="number" value={form.km} onChange={e => handleChange('km', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Combustível (R$)</Label>
-              <Input type="number" step="0.01" value={form.combustivel} onChange={e => handleChange('combustivel', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Pedágio (R$)</Label>
-              <Input type="number" step="0.01" value={form.pedagio} onChange={e => handleChange('pedagio', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Motorista (R$)</Label>
-              <Input type="number" step="0.01" value={form.motorista} onChange={e => handleChange('motorista', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>GTA/Ajudante (R$)</Label>
-              <Input type="number" step="0.01" value={form.gta_ajudante} onChange={e => handleChange('gta_ajudante', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Seguro Caminhão (R$)</Label>
-              <Input type="number" step="0.01" value={form.seguro_caminhao} onChange={e => handleChange('seguro_caminhao', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Custo Manutenções (R$)</Label>
-              <Input type="number" step="0.01" value={form.custo_manutencoes} onChange={e => handleChange('custo_manutencoes', e.target.value)} />
-            </div>
-            <div className="col-span-2 space-y-1.5">
-              <Label>Observação</Label>
-              <Input value={form.observacao} onChange={e => handleChange('observacao', e.target.value)} />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-2 gap-5">
+            <div className="col-span-2 space-y-1.5"><Label>Cidade</Label><Input value={form.cidade} onChange={e => handleChange('cidade', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>KM</Label><Input type="number" value={form.km} onChange={e => handleChange('km', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Combustível (R$)</Label><Input type="number" step="0.01" value={form.combustivel} onChange={e => handleChange('combustivel', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Pedágio (R$)</Label><Input type="number" step="0.01" value={form.pedagio} onChange={e => handleChange('pedagio', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Motorista (R$)</Label><Input type="number" step="0.01" value={form.motorista} onChange={e => handleChange('motorista', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>GTA/Ajudante (R$)</Label><Input type="number" step="0.01" value={form.gta_ajudante} onChange={e => handleChange('gta_ajudante', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Seguro Caminhão (R$)</Label><Input type="number" step="0.01" value={form.seguro_caminhao} onChange={e => handleChange('seguro_caminhao', e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>Custo Manutenções (R$)</Label><Input type="number" step="0.01" value={form.custo_manutencoes} onChange={e => handleChange('custo_manutencoes', e.target.value)} /></div>
+            <div className="col-span-2 space-y-1.5"><Label>Observação</Label><Input value={form.observacao} onChange={e => handleChange('observacao', e.target.value)} /></div>
           </div>
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </div>
@@ -142,25 +106,16 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFillColor(22, 80, 50);
       doc.rect(0, 0, pageWidth, 18, 'F');
-      doc.setFontSize(14);
-      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14); doc.setTextColor(255, 255, 255);
       doc.text(title, 14, 12);
       let y = 28;
-      const headers = ['Cidade', 'KM', 'Combustível', 'Pedágio', 'Motorista', 'GTA/Ajud.', 'Seguro', 'Manutenção', 'Total'];
-      doc.setFontSize(9);
-      doc.setTextColor(100);
+      const headers = ['Cidade', 'KM', 'Comb.', 'Pedágio', 'Motorista', 'GTA', 'Seguro', 'Manut.', 'Total'];
+      doc.setFontSize(9); doc.setTextColor(100);
       headers.forEach((h, i) => doc.text(h, 14 + i * 28, y));
-      y += 8;
-      doc.setTextColor(30);
+      y += 8; doc.setTextColor(30);
       sorted.forEach(c => {
         if (y > 190) { doc.addPage(); y = 20; }
-        const row = [
-          c.cidade || c.descricao || '', String(c.km || ''),
-          formatCurrency(c.combustivel), formatCurrency(c.pedagio),
-          formatCurrency(c.motorista), formatCurrency(c.gta_ajudante),
-          formatCurrency(c.seguro_caminhao), formatCurrency(c.custo_manutencoes),
-          formatCurrency(c.custo_total)
-        ];
+        const row = [c.cidade || c.descricao || '', String(c.km || ''), formatCurrency(c.combustivel), formatCurrency(c.pedagio), formatCurrency(c.motorista), formatCurrency(c.gta_ajudante), formatCurrency(c.seguro_caminhao), formatCurrency(c.custo_manutencoes), formatCurrency(c.custo_total)];
         row.forEach((v, i) => doc.text(String(v), 14 + i * 28, y));
         y += 7;
       });
@@ -176,15 +131,11 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
   return (
     <div>
       <PageHeader title={title} subtitle={subtitle}>
-        <Button variant="outline" onClick={exportPDF}>
-          <Download className="w-4 h-4 mr-1.5" /> PDF
-        </Button>
-        <Button onClick={() => setEditModal({ open: true, custo: null })}>
-          <Plus className="w-4 h-4 mr-1.5" /> Novo Custo
-        </Button>
+        <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
+        <Button onClick={() => setEditModal({ open: true, custo: null })}><Plus className="w-4 h-4 mr-2" /> Novo Custo</Button>
       </PageHeader>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mb-8">
         <StatCard icon={Truck} label="Combustível" value={`R$ ${formatCurrency(totalCombustivel)}`} />
         <StatCard icon={Truck} label="Pedágio" value={`R$ ${formatCurrency(totalPedagio)}`} />
         <StatCard icon={Truck} label="Motorista" value={`R$ ${formatCurrency(totalMotorista)}`} />
@@ -208,7 +159,7 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
               <TableHead>Seguro</TableHead>
               <TableHead>Manutenção</TableHead>
               <TableHead>Total</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -227,40 +178,22 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
                   <TableCell className="font-semibold">R$ {formatCurrency(total)}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, custo })}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, custo })}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => setEditModal({ open: true, custo })}><Pencil className="w-4 h-4" /></Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, custo })}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
               );
             })}
             {sorted.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center py-12 text-[#9ca3af]">Nenhum custo cadastrado</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-14 text-[#9ca3af]">Nenhum custo cadastrado</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </Card>
 
-      {editModal.open && (
-        <CustoForm
-          custo={editModal.custo}
-          entity={entity}
-          onSave={() => { setEditModal({ open: false, custo: null }); refresh(); }}
-          onClose={() => setEditModal({ open: false, custo: null })}
-        />
-      )}
-      <ConfirmDelete
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false, custo: null })}
-        onConfirm={handleDelete}
-        label={deleteModal.custo?.cidade || deleteModal.custo?.descricao}
-      />
+      {editModal.open && <CustoForm custo={editModal.custo} entity={entity} onSave={() => { setEditModal({ open: false, custo: null }); refresh(); }} onClose={() => setEditModal({ open: false, custo: null })} />}
+      <ConfirmDelete open={deleteModal.open} onClose={() => setDeleteModal({ open: false, custo: null })} onConfirm={handleDelete} label={deleteModal.custo?.cidade || deleteModal.custo?.descricao} />
     </div>
   );
 }

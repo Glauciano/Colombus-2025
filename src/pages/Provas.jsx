@@ -73,8 +73,8 @@ function ProvaForm({ prova, onSave, onClose }) {
         <DialogClose onClose={onClose} />
       </DialogHeader>
       <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-2 gap-5">
             <div className="col-span-2 space-y-1.5">
               <Label>Cidade</Label>
               <Input value={form.cidade} onChange={e => handleChange('cidade', e.target.value)} placeholder="Ex: Igaraçu → Brasília" />
@@ -116,7 +116,7 @@ function ProvaForm({ prova, onSave, onClose }) {
               </Select>
             </div>
           </div>
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </div>
@@ -149,7 +149,7 @@ export default function Provas() {
     <div>
       <PageHeader title="Provas" subtitle="Calendário de competições">
         <Button onClick={() => setEditModal({ open: true, prova: null })}>
-          <Plus className="w-4 h-4 mr-1.5" /> Nova Prova
+          <Plus className="w-4 h-4 mr-2" /> Nova Prova
         </Button>
       </PageHeader>
 
@@ -166,7 +166,7 @@ export default function Provas() {
               <TableHead>Data Solta</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -185,11 +185,11 @@ export default function Provas() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
-                      <Pencil className="w-3.5 h-3.5" />
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => setEditModal({ open: true, prova })}>
+                      <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, prova })}>
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, prova })}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -197,7 +197,7 @@ export default function Provas() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-[#9ca3af]">Nenhuma prova cadastrada</TableCell>
+                <TableCell colSpan={8} className="text-center py-14 text-[#9ca3af]">Nenhuma prova cadastrada</TableCell>
               </TableRow>
             )}
           </TableBody>

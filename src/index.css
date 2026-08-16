@@ -1,35 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  --font-display: "Inter", sans-serif;
-  --color-background: #fbfaf9;
+  --font-display: "Playfair Display", serif;
+  --color-background: #faf8f3;
   --color-foreground: #12211c;
   --color-card: #ffffff;
   --color-card-foreground: #12211c;
-  --color-primary: #15803d;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f6f5f3;
-  --color-secondary-foreground: #12211c;
-  --color-muted: #f6f5f3;
-  --color-muted-foreground: #677e77;
-  --color-accent: #b8860b;
+  --color-primary: #1a5c3d;
+  --color-primary-foreground: #faf8f3;
+  --color-secondary: #f0ebe0;
+  --color-secondary-foreground: #1a2b23;
+  --color-muted: #f0ede7;
+  --color-muted-foreground: #6b8a7e;
+  --color-accent: #e5a51b;
   --color-accent-foreground: #12211c;
   --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #e5e7eb;
-  --color-input: #d1d5db;
-  --color-ring: #15803d;
+  --color-destructive-foreground: #faf8f3;
+  --color-border: #e5ddd1;
+  --color-input: #e5ddd1;
+  --color-ring: #1a5c3d;
   --color-sidebar: #12211c;
-  --color-sidebar-foreground: #ebe7e0;
-  --color-sidebar-active: #ebe7e0;
-  --color-sidebar-muted: #677e77;
-  --color-chart-1: #15803d;
-  --color-chart-2: #b8860b;
-  --color-chart-3: #677e77;
+  --color-sidebar-foreground: #e8e2d7;
+  --color-sidebar-active: #233f32;
+  --color-sidebar-muted: #6b8a7e;
+  --color-chart-1: #1a5c3d;
+  --color-chart-2: #e5a51b;
+  --color-chart-3: #6b8a7e;
   --color-chart-4: #dc2626;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

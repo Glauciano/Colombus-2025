@@ -103,13 +103,12 @@ function VendaForm({ venda, onSave, onClose }) {
         <DialogClose onClose={onClose} />
       </DialogHeader>
       <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
             <Label>Sócio / Comprador</Label>
             <Input value={form.socio} onChange={e => handleChange('socio', e.target.value)} placeholder="Nome do sócio" />
           </div>
-
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Nº Início</Label>
               <Input type="number" value={form.numero_inicio} onChange={e => handleChange('numero_inicio', e.target.value)} placeholder="1" />
@@ -123,22 +122,16 @@ function VendaForm({ venda, onSave, onClose }) {
               <Input type="number" value={form.ano} onChange={e => handleChange('ano', e.target.value)} />
             </div>
           </div>
-
           {qtd > 0 && (
-            <div className="p-3 rounded-lg bg-[#f6f5f3] text-sm">
-              <span className="text-[#677e77]">Faixa: </span>
-              <span className="font-mono font-semibold text-[#12211c]">
-                {formatAnilha(Number(form.numero_inicio), form.ano)}
-              </span>
-              <span className="text-[#677e77]"> até </span>
-              <span className="font-mono font-semibold text-[#12211c]">
-                {formatAnilha(Number(form.numero_fim), form.ano)}
-              </span>
-              <span className="text-[#677e77] ml-2">({qtd} anilhas)</span>
+            <div className="p-4 rounded-lg bg-[#f0ede7] text-sm">
+              <span className="text-[#6b8a7e]">Faixa: </span>
+              <span className="font-mono font-semibold text-[#12211c]">{formatAnilha(Number(form.numero_inicio), form.ano)}</span>
+              <span className="text-[#6b8a7e]"> até </span>
+              <span className="font-mono font-semibold text-[#12211c]">{formatAnilha(Number(form.numero_fim), form.ano)}</span>
+              <span className="text-[#6b8a7e] ml-3">({qtd} anilhas)</span>
             </div>
           )}
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <Label>Valor Unitário (R$)</Label>
               <Input type="number" step="0.01" value={form.valor_unitario} onChange={e => handleChange('valor_unitario', e.target.value)} placeholder="0.00" />
@@ -148,8 +141,7 @@ function VendaForm({ venda, onSave, onClose }) {
               <Input type="number" step="0.01" value={form.valor_total} onChange={e => handleChange('valor_total', e.target.value)} placeholder="Auto" />
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <Label>Data da Venda</Label>
               <Input type="date" value={form.data_venda} onChange={e => handleChange('data_venda', e.target.value)} />
@@ -161,13 +153,11 @@ function VendaForm({ venda, onSave, onClose }) {
               </Select>
             </div>
           </div>
-
           <div className="space-y-1.5">
             <Label>Observação</Label>
             <Input value={form.observacao} onChange={e => handleChange('observacao', e.target.value)} />
           </div>
-
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex gap-3 justify-end pt-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
           </div>
@@ -197,7 +187,6 @@ export default function VendaAnilhas() {
     const fim = Number(v.numero_fim) || 0;
     return s + (fim >= inicio ? fim - inicio + 1 : 0);
   }, 0);
-
   const totalValor = vendas.reduce((s, v) => s + (v.valor_total || 0), 0);
   const totalVendido = vendas.filter(v => v.status === 'Vendido').reduce((s, v) => s + (v.valor_total || 0), 0);
   const totalDisponivel = vendas.filter(v => v.status === 'Disponível').reduce((s, v) => s + (v.valor_total || 0), 0);
@@ -213,12 +202,10 @@ export default function VendaAnilhas() {
       doc.text('Vendas de Anilhas - Colombus 2025', 14, 12);
       let y = 30;
       const headers = ['Sócio', 'Faixa', 'Ano', 'Qtd', 'Valor Unit.', 'Valor Total', 'Status'];
-      doc.setFontSize(9);
-      doc.setTextColor(100);
+      doc.setFontSize(9); doc.setTextColor(100);
       const colX = [14, 64, 120, 140, 155, 185, 215];
       headers.forEach((h, i) => doc.text(h, colX[i], y));
-      y += 8;
-      doc.setTextColor(30);
+      y += 8; doc.setTextColor(30);
       filtered.forEach(v => {
         if (y > 190) { doc.addPage(); y = 20; }
         const inicio = Number(v.numero_inicio) || 0;
@@ -251,36 +238,28 @@ export default function VendaAnilhas() {
     <div>
       <PageHeader title="Vendas de Anilhas" subtitle="Controle de vendas de anilhas por sócio">
         <Button variant="outline" onClick={exportPDF}>
-          <Download className="w-4 h-4 mr-1.5" /> PDF
+          <Download className="w-4 h-4 mr-2" /> PDF
         </Button>
         <Button onClick={() => setEditModal({ open: true, venda: null })}>
-          <Plus className="w-4 h-4 mr-1.5" /> Nova Venda
+          <Plus className="w-4 h-4 mr-2" /> Nova Venda
         </Button>
       </PageHeader>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard icon={CircleDot} label="Total de Anilhas" value={totalAnilhas.toLocaleString('pt-BR')} />
         <StatCard icon={CircleDot} label="Valor Total" value={`R$ ${formatCurrency(totalValor)}`} accent />
         <StatCard icon={CircleDot} label="Vendido" value={`R$ ${formatCurrency(totalVendido)}`} />
         <StatCard icon={CircleDot} label="Disponível" value={`R$ ${formatCurrency(totalDisponivel)}`} />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-          <Input
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Buscar sócio..."
-            className="pl-9"
-          />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+          <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar sócio..." className="pl-10" />
         </div>
         <FilterTabs options={filterOptions} active={statusFilter} onChange={setStatusFilter} />
       </div>
 
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -292,7 +271,7 @@ export default function VendaAnilhas() {
               <TableHead>Valor Total</TableHead>
               <TableHead>Data</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -304,7 +283,7 @@ export default function VendaAnilhas() {
                 <TableRow key={venda.id}>
                   <TableCell className="font-medium">{venda.socio || '—'}</TableCell>
                   <TableCell>
-                    <span className="font-mono text-xs text-[#677e77]">
+                    <span className="font-mono text-xs text-[#6b8a7e]">
                       {formatAnilha(inicio, venda.ano)} → {formatAnilha(fim, venda.ano)}
                     </span>
                   </TableCell>
@@ -319,11 +298,11 @@ export default function VendaAnilhas() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, venda })}>
-                        <Pencil className="w-3.5 h-3.5" />
+                      <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => setEditModal({ open: true, venda })}>
+                        <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, venda })}>
-                        <Trash2 className="w-3.5 h-3.5" />
+                      <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, venda })}>
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -332,7 +311,7 @@ export default function VendaAnilhas() {
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-[#9ca3af]">Nenhuma venda cadastrada</TableCell>
+                <TableCell colSpan={8} className="text-center py-14 text-[#9ca3af]">Nenhuma venda cadastrada</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -340,18 +319,9 @@ export default function VendaAnilhas() {
       </Card>
 
       {editModal.open && (
-        <VendaForm
-          venda={editModal.venda}
-          onSave={() => { setEditModal({ open: false, venda: null }); refresh(); }}
-          onClose={() => setEditModal({ open: false, venda: null })}
-        />
+        <VendaForm venda={editModal.venda} onSave={() => { setEditModal({ open: false, venda: null }); refresh(); }} onClose={() => setEditModal({ open: false, venda: null })} />
       )}
-      <ConfirmDelete
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false, venda: null })}
-        onConfirm={handleDelete}
-        label={deleteModal.venda?.socio}
-      />
+      <ConfirmDelete open={deleteModal.open} onClose={() => setDeleteModal({ open: false, venda: null })} onConfirm={handleDelete} label={deleteModal.venda?.socio} />
     </div>
   );
 }
