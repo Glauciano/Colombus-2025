@@ -3,22 +3,14 @@ import { Plus, Pencil, Trash2, CircleDot, Download, Search } from 'lucide-react'
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import {
-  Button, Input, Select, Label, Card, CardHeader, CardTitle, CardContent,
+  Button, Input, Select, Label, Card,
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  StatCard, ConfirmDelete, Badge
+  StatCard, ConfirmDelete, Badge, PageHeader, FilterTabs
 } from '../components/ui';
 
-// Helper to format anilha number (e.g., "0000001/26")
 function formatAnilha(num, ano) {
   return String(num).padStart(7, '0') + '/' + String(ano).slice(-2);
-}
-
-// Parse anilha string "0000001/26" -> { num: 1, ano: 2026 }
-function parseAnilha(str) {
-  if (!str) return null;
-  const parts = str.split('/');
-  return { num: parseInt(parts[0], 10), ano: parseInt(parts[1], 10) };
 }
 
 const emptyVenda = {
@@ -29,10 +21,10 @@ const emptyVenda = {
 
 const STATUS_OPTIONS = ['Disponível', 'Reservado', 'Vendido', 'Devolvido'];
 const statusColors = {
-  'Disponível': 'bg-blue-100 text-blue-800 border border-blue-200',
-  'Reservado': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  'Vendido': 'bg-green-100 text-green-800 border border-green-200',
-  'Devolvido': 'bg-red-100 text-red-800 border border-red-200',
+  'Disponível': 'bg-blue-50 text-blue-700',
+  'Reservado': 'bg-amber-50 text-amber-700',
+  'Vendido': 'bg-emerald-50 text-emerald-700',
+  'Devolvido': 'bg-red-50 text-red-700',
 };
 
 function VendaForm({ venda, onSave, onClose }) {
@@ -59,7 +51,6 @@ function VendaForm({ venda, onSave, onClose }) {
   const handleChange = (field, value) => {
     setForm(prev => {
       const updated = { ...prev, [field]: value };
-      // Auto-calculate total when unit value or range changes
       if (['valor_unitario', 'numero_inicio', 'numero_fim'].includes(field)) {
         const inicio = field === 'numero_inicio' ? Number(value) : Number(updated.numero_inicio);
         const fim = field === 'numero_fim' ? Number(value) : Number(updated.numero_fim);
@@ -88,7 +79,6 @@ function VendaForm({ venda, onSave, onClose }) {
       status: form.status,
       observacao: form.observacao,
     };
-    // Auto-calc total if not set
     if (!data.valor_total && data.valor_unitario && data.numero_inicio && data.numero_fim) {
       const qtd = Number(data.numero_fim) - Number(data.numero_inicio) + 1;
       data.valor_total = qtd * data.valor_unitario;
@@ -122,78 +112,47 @@ function VendaForm({ venda, onSave, onClose }) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Nº Início</Label>
-              <Input
-                type="number"
-                value={form.numero_inicio}
-                onChange={e => handleChange('numero_inicio', e.target.value)}
-                placeholder="Ex: 1"
-              />
+              <Input type="number" value={form.numero_inicio} onChange={e => handleChange('numero_inicio', e.target.value)} placeholder="1" />
             </div>
             <div className="space-y-1.5">
               <Label>Nº Fim</Label>
-              <Input
-                type="number"
-                value={form.numero_fim}
-                onChange={e => handleChange('numero_fim', e.target.value)}
-                placeholder="Ex: 50"
-              />
+              <Input type="number" value={form.numero_fim} onChange={e => handleChange('numero_fim', e.target.value)} placeholder="50" />
             </div>
             <div className="space-y-1.5">
               <Label>Ano</Label>
-              <Input
-                type="number"
-                value={form.ano}
-                onChange={e => handleChange('ano', e.target.value)}
-              />
+              <Input type="number" value={form.ano} onChange={e => handleChange('ano', e.target.value)} />
             </div>
           </div>
 
-          {/* Preview of range */}
           {qtd > 0 && (
-            <div className="p-3 rounded-lg bg-muted text-sm">
-              <span className="text-muted-foreground">Faixa: </span>
-              <span className="font-mono font-semibold">
+            <div className="p-3 rounded-lg bg-[#f6f5f3] text-sm">
+              <span className="text-[#677e77]">Faixa: </span>
+              <span className="font-mono font-semibold text-[#12211c]">
                 {formatAnilha(Number(form.numero_inicio), form.ano)}
               </span>
-              <span className="text-muted-foreground"> até </span>
-              <span className="font-mono font-semibold">
+              <span className="text-[#677e77]"> até </span>
+              <span className="font-mono font-semibold text-[#12211c]">
                 {formatAnilha(Number(form.numero_fim), form.ano)}
               </span>
-              <span className="text-muted-foreground ml-2">({qtd} anilhas)</span>
+              <span className="text-[#677e77] ml-2">({qtd} anilhas)</span>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Valor Unitário (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.valor_unitario}
-                onChange={e => handleChange('valor_unitario', e.target.value)}
-                placeholder="0.00"
-              />
+              <Input type="number" step="0.01" value={form.valor_unitario} onChange={e => handleChange('valor_unitario', e.target.value)} placeholder="0.00" />
             </div>
             <div className="space-y-1.5">
               <Label>Valor Total (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.valor_total}
-                onChange={e => handleChange('valor_total', e.target.value)}
-                placeholder="Auto"
-              />
+              <Input type="number" step="0.01" value={form.valor_total} onChange={e => handleChange('valor_total', e.target.value)} placeholder="Auto" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Data da Venda</Label>
-              <Input
-                type="date"
-                value={form.data_venda}
-                onChange={e => handleChange('data_venda', e.target.value)}
-              />
+              <Input type="date" value={form.data_venda} onChange={e => handleChange('data_venda', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>
@@ -224,6 +183,7 @@ export default function VendaAnilhas() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('todos');
   const { data: vendas, refresh, isLoading, remove: deleteVenda } = useCollection(ENTITIES.VENDA_ANILHA);
+
   const filtered = vendas
     .filter(v => {
       if (statusFilter !== 'todos' && v.status !== statusFilter) return false;
@@ -251,7 +211,6 @@ export default function VendaAnilhas() {
       doc.setFontSize(14);
       doc.setTextColor(255, 255, 255);
       doc.text('Vendas de Anilhas - Colombus 2025', 14, 12);
-
       let y = 30;
       const headers = ['Sócio', 'Faixa', 'Ano', 'Qtd', 'Valor Unit.', 'Valor Total', 'Status'];
       doc.setFontSize(9);
@@ -260,7 +219,6 @@ export default function VendaAnilhas() {
       headers.forEach((h, i) => doc.text(h, colX[i], y));
       y += 8;
       doc.setTextColor(30);
-
       filtered.forEach(v => {
         if (y > 190) { doc.addPage(); y = 20; }
         const inicio = Number(v.numero_inicio) || 0;
@@ -284,27 +242,24 @@ export default function VendaAnilhas() {
     setDeleteModal({ open: false, venda: null });
   };
 
+  const filterOptions = [
+    { value: 'todos', label: 'Todos' },
+    ...STATUS_OPTIONS.map(s => ({ value: s, label: s }))
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>
-            Vendas de Anilhas
-          </h1>
-          <p className="text-sm text-muted-foreground">Controle de vendas de anilhas por sócio</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPDF}>
-            <Download className="w-4 h-4 mr-2" /> PDF
-          </Button>
-          <Button onClick={() => setEditModal({ open: true, venda: null })}>
-            <Plus className="w-4 h-4 mr-2" /> Nova Venda
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader title="Vendas de Anilhas" subtitle="Controle de vendas de anilhas por sócio">
+        <Button variant="outline" onClick={exportPDF}>
+          <Download className="w-4 h-4 mr-1.5" /> PDF
+        </Button>
+        <Button onClick={() => setEditModal({ open: true, venda: null })}>
+          <Plus className="w-4 h-4 mr-1.5" /> Nova Venda
+        </Button>
+      </PageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon={CircleDot} label="Total de Anilhas" value={totalAnilhas.toLocaleString('pt-BR')} />
         <StatCard icon={CircleDot} label="Valor Total" value={`R$ ${formatCurrency(totalValor)}`} accent />
         <StatCard icon={CircleDot} label="Vendido" value={`R$ ${formatCurrency(totalVendido)}`} />
@@ -312,31 +267,17 @@ export default function VendaAnilhas() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
           <Input
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Buscar sócio..."
-            className="pl-10"
+            className="pl-9"
           />
         </div>
-        <div className="flex gap-2">
-          {['todos', ...STATUS_OPTIONS].map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === s
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-secondary'
-              }`}
-            >
-              {s === 'todos' ? 'Todos' : s}
-            </button>
-          ))}
-        </div>
+        <FilterTabs options={filterOptions} active={statusFilter} onChange={setStatusFilter} />
       </div>
 
       {/* Table */}
@@ -363,13 +304,11 @@ export default function VendaAnilhas() {
                 <TableRow key={venda.id}>
                   <TableCell className="font-medium">{venda.socio || '—'}</TableCell>
                   <TableCell>
-                    <span className="font-mono text-xs">
+                    <span className="font-mono text-xs text-[#677e77]">
                       {formatAnilha(inicio, venda.ano)} → {formatAnilha(fim, venda.ano)}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{qtd}</Badge>
-                  </TableCell>
+                  <TableCell><Badge variant="secondary">{qtd}</Badge></TableCell>
                   <TableCell>R$ {formatCurrency(venda.valor_unitario)}</TableCell>
                   <TableCell className="font-semibold">R$ {formatCurrency(venda.valor_total)}</TableCell>
                   <TableCell>{formatDate(venda.data_venda)}</TableCell>
@@ -383,7 +322,7 @@ export default function VendaAnilhas() {
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, venda })}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteModal({ open: true, venda })}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, venda })}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -393,7 +332,7 @@ export default function VendaAnilhas() {
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma venda cadastrada</TableCell>
+                <TableCell colSpan={8} className="text-center py-12 text-[#9ca3af]">Nenhuma venda cadastrada</TableCell>
               </TableRow>
             )}
           </TableBody>

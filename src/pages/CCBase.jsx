@@ -3,17 +3,17 @@ import { Plus, Pencil, Trash2, Wallet, Download } from 'lucide-react';
 import { db, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import {
-  Button, Input, Select, Label, Card, CardHeader, CardTitle, CardContent,
+  Button, Input, Select, Label, Card,
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  StatCard, ConfirmDelete
+  StatCard, ConfirmDelete, PageHeader
 } from '../components/ui';
 
 const STATUS_OPTIONS = ['Pendente', 'Pago', 'Atrasado'];
 const statusColors = {
-  'Pendente': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  'Pago': 'bg-green-100 text-green-800 border border-green-200',
-  'Atrasado': 'bg-red-100 text-red-800 border border-red-200',
+  'Pendente': 'bg-amber-50 text-amber-700',
+  'Pago': 'bg-emerald-50 text-emerald-700',
+  'Atrasado': 'bg-red-50 text-red-700',
 };
 
 const emptyItem = {
@@ -111,7 +111,6 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
       doc.setFontSize(14);
       doc.setTextColor(255, 255, 255);
       doc.text(title, 14, 12);
-      
       let y = 30;
       const headers = ['Descrição', 'Valor', 'Vencimento', 'Status'];
       doc.setFontSize(9);
@@ -137,30 +136,22 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>{title}</h1>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPDF}>
-            <Download className="w-4 h-4 mr-2" /> Exportar PDF
-          </Button>
-          <Button onClick={() => setEditModal({ open: true, item: null })}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Lançamento
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader title={title} subtitle={subtitle}>
+        <Button variant="outline" onClick={exportPDF}>
+          <Download className="w-4 h-4 mr-1.5" /> PDF
+        </Button>
+        <Button onClick={() => setEditModal({ open: true, item: null })}>
+          <Plus className="w-4 h-4 mr-1.5" /> Novo Lançamento
+        </Button>
+      </PageHeader>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard icon={Wallet} label="Total" value={`R$ ${formatCurrency(totalValor)}`} />
         <StatCard icon={Wallet} label="Recebido" value={`R$ ${formatCurrency(totalPago)}`} />
         <StatCard icon={Wallet} label="Pendente" value={`R$ ${formatCurrency(totalPendente)}`} accent />
       </div>
 
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -185,10 +176,10 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditModal({ open: true, item })}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, item })}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteModal({ open: true, item })}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, item })}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -197,7 +188,7 @@ export default function CCPage({ entity, queryKey, title, subtitle, pdfName }) {
             ))}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum lançamento cadastrado</TableCell>
+                <TableCell colSpan={5} className="text-center py-12 text-[#9ca3af]">Nenhum lançamento cadastrado</TableCell>
               </TableRow>
             )}
           </TableBody>

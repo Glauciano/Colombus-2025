@@ -3,10 +3,10 @@ import { Plus, Pencil, Trash2, Users, Download } from 'lucide-react';
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import {
-  Button, Input, Label, Card, CardHeader, CardTitle, CardContent,
+  Button, Input, Label, Card,
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  StatCard, ConfirmDelete, Badge
+  StatCard, ConfirmDelete, Badge, PageHeader
 } from '../components/ui';
 
 const PARCELAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -78,13 +78,12 @@ function SocioForm({ socio, onSave, onClose }) {
             </div>
           </div>
 
-          {/* Parcelas */}
           <div>
-            <h4 className="font-semibold text-sm mb-3" style={{ color: 'hsl(160 45% 22%)' }}>Parcelas</h4>
+            <h4 className="text-sm font-semibold text-[#12211c] mb-3">Parcelas</h4>
             <div className="space-y-2">
               {PARCELAS.map(i => (
                 <div key={i} className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
-                  <span className="text-xs text-muted-foreground w-6">{i}ª</span>
+                  <span className="text-xs font-medium text-[#677e77] w-6">{i}ª</span>
                   <Input
                     type="number" step="0.01" placeholder="Valor"
                     value={form[`parcela_${i}`] || ''}
@@ -102,9 +101,9 @@ function SocioForm({ socio, onSave, onClose }) {
                       type="checkbox"
                       checked={form[`pago_parcela_${i}`] || false}
                       onChange={e => handleChange(`pago_parcela_${i}`, e.target.checked)}
-                      className="accent-primary w-4 h-4"
+                      className="accent-[#15803d] w-4 h-4"
                     />
-                    <span className="text-xs">Pago</span>
+                    <span className="text-xs text-[#677e77]">Pago</span>
                   </label>
                 </div>
               ))}
@@ -145,7 +144,6 @@ export default function CCLimeira() {
       doc.setFontSize(14);
       doc.setTextColor(255, 255, 255);
       doc.text('Conta Corrente Limeira - Sócios', 14, 12);
-      
       let y = 30;
       doc.setFontSize(9);
       doc.setTextColor(100);
@@ -173,30 +171,22 @@ export default function CCLimeira() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>Conta Corrente Limeira</h1>
-          <p className="text-sm text-muted-foreground">Gestão de sócios e parcelas</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPDF}>
-            <Download className="w-4 h-4 mr-2" /> Exportar PDF
-          </Button>
-          <Button onClick={() => setEditModal({ open: true, socio: null })}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Sócio
-          </Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader title="Conta Corrente Limeira" subtitle="Gestão de sócios e parcelas">
+        <Button variant="outline" onClick={exportPDF}>
+          <Download className="w-4 h-4 mr-1.5" /> PDF
+        </Button>
+        <Button onClick={() => setEditModal({ open: true, socio: null })}>
+          <Plus className="w-4 h-4 mr-1.5" /> Novo Sócio
+        </Button>
+      </PageHeader>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard icon={Users} label="Total Geral" value={`R$ ${formatCurrency(totalGeral)}`} />
         <StatCard icon={Users} label="Total Pago" value={`R$ ${formatCurrency(totalPago)}`} />
         <StatCard icon={Users} label="Total Pendente" value={`R$ ${formatCurrency(totalPendente)}`} accent />
       </div>
 
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -222,7 +212,7 @@ export default function CCLimeira() {
                   <TableCell>{socio.telefone || '—'}</TableCell>
                   <TableCell>R$ {formatCurrency(total)}</TableCell>
                   <TableCell>R$ {formatCurrency(pago)}</TableCell>
-                  <TableCell className={total - pago > 0 ? 'text-destructive font-semibold' : 'text-green-600 font-semibold'}>
+                  <TableCell className={total - pago > 0 ? 'text-[#dc2626] font-semibold' : 'text-[#15803d] font-semibold'}>
                     R$ {formatCurrency(total - pago)}
                   </TableCell>
                   <TableCell>
@@ -235,7 +225,7 @@ export default function CCLimeira() {
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, socio })}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteModal({ open: true, socio })}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, socio })}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -245,7 +235,7 @@ export default function CCLimeira() {
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum sócio cadastrado</TableCell>
+                <TableCell colSpan={7} className="text-center py-12 text-[#9ca3af]">Nenhum sócio cadastrado</TableCell>
               </TableRow>
             )}
           </TableBody>

@@ -3,10 +3,10 @@ import { Plus, Pencil, Trash2, Download, Truck } from 'lucide-react';
 import { db, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import {
-  Button, Input, Label, Card, CardHeader, CardTitle, CardContent,
+  Button, Input, Label, Card,
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  StatCard, ConfirmDelete
+  StatCard, ConfirmDelete, PageHeader, TotalBar
 } from '../components/ui';
 
 const emptyCusto = {
@@ -140,23 +140,17 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
     import('jspdf').then(({ default: jsPDF }) => {
       const doc = new jsPDF({ orientation: 'landscape' });
       const pageWidth = doc.internal.pageSize.getWidth();
-      
-      // Header
       doc.setFillColor(22, 80, 50);
       doc.rect(0, 0, pageWidth, 18, 'F');
       doc.setFontSize(14);
       doc.setTextColor(255, 255, 255);
       doc.text(title, 14, 12);
-      
-      // Table header
       let y = 28;
       const headers = ['Cidade', 'KM', 'Combustível', 'Pedágio', 'Motorista', 'GTA/Ajud.', 'Seguro', 'Manutenção', 'Total'];
       doc.setFontSize(9);
       doc.setTextColor(100);
       headers.forEach((h, i) => doc.text(h, 14 + i * 28, y));
       y += 8;
-
-      // Rows
       doc.setTextColor(30);
       sorted.forEach(c => {
         if (y > 190) { doc.addPage(); y = 20; }
@@ -170,7 +164,6 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
         row.forEach((v, i) => doc.text(String(v), 14 + i * 28, y));
         y += 7;
       });
-
       doc.save(pdfName);
     });
   };
@@ -181,17 +174,15 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-[#12211c]">{title}</h1>
-          <p className="text-sm text-[#677e77] mt-0.5">{subtitle}</p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
-          <Button onClick={() => setEditModal({ open: true, custo: null })}><Plus className="w-4 h-4 mr-2" /> Novo Custo</Button>
-        </div>
-      </div>
+    <div>
+      <PageHeader title={title} subtitle={subtitle}>
+        <Button variant="outline" onClick={exportPDF}>
+          <Download className="w-4 h-4 mr-1.5" /> PDF
+        </Button>
+        <Button onClick={() => setEditModal({ open: true, custo: null })}>
+          <Plus className="w-4 h-4 mr-1.5" /> Novo Custo
+        </Button>
+      </PageHeader>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <StatCard icon={Truck} label="Combustível" value={`R$ ${formatCurrency(totalCombustivel)}`} />
@@ -202,12 +193,8 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
         <StatCard icon={Truck} label="Manutenção" value={`R$ ${formatCurrency(totalManut)}`} accent />
       </div>
 
-      <div className="flex items-center justify-between p-4 rounded-md bg-[#fefce8] border border-[#fef9c3] mb-6">
-        <span className="text-sm font-medium text-[#b8860b]">Total Geral</span>
-        <span className="text-lg font-semibold text-[#b8860b]">R$ {formatCurrency(totalGeral)}</span>
-      </div>
+      <TotalBar value={`R$ ${formatCurrency(totalGeral)}`} />
 
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -243,7 +230,7 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, custo })}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteModal({ open: true, custo })}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, custo })}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -253,7 +240,7 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Nenhum custo cadastrado</TableCell>
+                <TableCell colSpan={10} className="text-center py-12 text-[#9ca3af]">Nenhum custo cadastrado</TableCell>
               </TableRow>
             )}
           </TableBody>

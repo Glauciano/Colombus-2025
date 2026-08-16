@@ -3,6 +3,7 @@
 
 @theme {
   --font-sans: "Inter", sans-serif;
+  --font-display: "Inter", sans-serif;
   --color-background: #fbfaf9;
   --color-foreground: #12211c;
   --color-card: #ffffff;
@@ -24,6 +25,10 @@
   --color-sidebar-foreground: #ebe7e0;
   --color-sidebar-active: #ebe7e0;
   --color-sidebar-muted: #677e77;
+  --color-chart-1: #15803d;
+  --color-chart-2: #b8860b;
+  --color-chart-3: #677e77;
+  --color-chart-4: #dc2626;
   --radius: 0.5rem;
 }
 
@@ -35,8 +40,10 @@ body {
   color: var(--color-foreground);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }

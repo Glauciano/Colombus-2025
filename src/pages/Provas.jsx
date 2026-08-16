@@ -1,22 +1,22 @@
 import React from 'react';
-import { Plus, Pencil, Trash2, Trophy, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import {
   Button, Input, Select, Label, Card,
   Dialog, DialogHeader, DialogTitle, DialogContent, DialogClose,
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  Badge, ConfirmDelete, Spinner
+  Badge, ConfirmDelete, PageHeader, FilterTabs
 } from '../components/ui';
 
 const CATEGORIAS = ['Copa Filhotes', 'Campeonato Adultos'];
 const STATUS_OPTIONS = ['Programada', 'Em Andamento', 'Concluída', 'Cancelada'];
 
 const statusColors = {
-  'Programada': 'bg-blue-100 text-blue-800 border border-blue-200',
-  'Em Andamento': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  'Concluída': 'bg-green-100 text-green-800 border border-green-200',
-  'Cancelada': 'bg-red-100 text-red-800 border border-red-200',
+  'Programada': 'bg-blue-50 text-blue-700',
+  'Em Andamento': 'bg-amber-50 text-amber-700',
+  'Concluída': 'bg-emerald-50 text-emerald-700',
+  'Cancelada': 'bg-red-50 text-red-700',
 };
 
 const emptyProva = {
@@ -131,45 +131,30 @@ export default function Provas() {
   const [editModal, setEditModal] = React.useState({ open: false, prova: null });
   const [deleteModal, setDeleteModal] = React.useState({ open: false, prova: null });
 
-  const { data: provas, refresh, create: createProva, update: updateProva, remove: deleteProva } = useCollection(ENTITIES.PROVA);
+  const { data: provas, refresh, remove: removeProva } = useCollection(ENTITIES.PROVA);
   const filtered = [...(filter === 'todas' ? provas : provas.filter(p => p.categoria === filter))]
     .sort((a, b) => (a.data_solta && b.data_solta) ? new Date(b.data_solta) - new Date(a.data_solta) : 0);
 
   const handleDelete = async () => {
-    await deleteProva(deleteModal.prova.id);
+    await removeProva(deleteModal.prova.id);
     setDeleteModal({ open: false, prova: null });
   };
 
+  const filterOptions = [
+    { value: 'todas', label: 'Todas' },
+    ...CATEGORIAS.map(c => ({ value: c, label: c }))
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-[#12211c]">Provas</h1>
-          <p className="text-sm text-[#677e77] mt-0.5">Calendário de competições</p>
-        </div>
+    <div>
+      <PageHeader title="Provas" subtitle="Calendário de competições">
         <Button onClick={() => setEditModal({ open: true, prova: null })}>
-          <Plus className="w-4 h-4 mr-2" /> Nova Prova
+          <Plus className="w-4 h-4 mr-1.5" /> Nova Prova
         </Button>
-      </div>
+      </PageHeader>
 
-      {/* Filter */}
-      <div className="flex gap-1 p-1 bg-[#f6f5f3] rounded-md w-fit mb-6">
-        {['todas', ...CATEGORIAS].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`px-4 py-1.5 rounded text-xs font-medium transition-colors ${
-              filter === cat
-                ? 'bg-white text-[#12211c] shadow-sm'
-                : 'text-[#677e77] hover:text-[#12211c]'
-            }`}
-          >
-            {cat === 'todas' ? 'Todas' : cat}
-          </button>
-        ))}
-      </div>
+      <FilterTabs options={filterOptions} active={filter} onChange={setFilter} />
 
-      {/* Table */}
       <Card>
         <Table>
           <TableHeader>
@@ -203,7 +188,7 @@ export default function Provas() {
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteModal({ open: true, prova })}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-[#dc2626]" onClick={() => setDeleteModal({ open: true, prova })}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -212,7 +197,7 @@ export default function Provas() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma prova cadastrada</TableCell>
+                <TableCell colSpan={8} className="text-center py-12 text-[#9ca3af]">Nenhuma prova cadastrada</TableCell>
               </TableRow>
             )}
           </TableBody>
