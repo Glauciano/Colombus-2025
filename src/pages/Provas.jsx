@@ -145,23 +145,23 @@ export default function Provas() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>Provas</h1>
-          <p className="text-sm text-muted-foreground">Calendário de competições de pombos-correio</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Calendário de competições de pombos-correio</p>
         </div>
-        <Button onClick={() => setEditModal({ open: true, prova: null })}>
+        <Button onClick={() => setEditModal({ open: true, prova: null })} className="shadow-primary/20">
           <Plus className="w-4 h-4 mr-2" /> Nova Prova
         </Button>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 p-1 rounded-xl bg-muted/50 w-fit">
         {['todas', ...CATEGORIAS].map(cat => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               filter === cat
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-secondary'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
             }`}
           >
             {cat === 'todas' ? 'Todas' : cat}

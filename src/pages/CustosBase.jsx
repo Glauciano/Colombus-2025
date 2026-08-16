@@ -185,11 +185,11 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>{title}</h1>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportPDF}>
-            <Download className="w-4 h-4 mr-2" /> Exportar PDF
+            <Download className="w-4 h-4 mr-2" /> PDF
           </Button>
           <Button onClick={() => setEditModal({ open: true, custo: null })}>
             <Plus className="w-4 h-4 mr-2" /> Novo Custo
@@ -198,7 +198,7 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard icon={Truck} label="Combustível" value={`R$ ${formatCurrency(totalCombustivel)}`} />
         <StatCard icon={Truck} label="Pedágio" value={`R$ ${formatCurrency(totalPedagio)}`} />
         <StatCard icon={Truck} label="Motorista" value={`R$ ${formatCurrency(totalMotorista)}`} />
@@ -208,12 +208,13 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
       </div>
 
       {/* Total */}
-      <Card className="border-accent/30">
-        <CardContent className="p-4 flex items-center justify-between">
-          <span className="font-medium">Total Geral</span>
-          <span className="text-xl font-bold" style={{ color: 'hsl(42 85% 55%)' }}>R$ {formatCurrency(totalGeral)}</span>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between p-4 rounded-xl border border-accent/20" style={{ background: 'linear-gradient(135deg, hsl(42 85% 55% / 8%) 0%, hsl(42 85% 55% / 3%) 100%)' }}>
+        <div className="flex items-center gap-2">
+          <Truck className="w-5 h-5 text-accent" />
+          <span className="font-semibold">Total Geral</span>
+        </div>
+        <span className="text-2xl font-bold" style={{ color: 'hsl(42 85% 55%)' }}>R$ {formatCurrency(totalGeral)}</span>
+      </div>
 
       {/* Table */}
       <Card>
