@@ -142,10 +142,10 @@ export default function Provas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Provas</h1>
-          <p className="text-sm text-gray-500 mt-1">Calendário de competições</p>
+          <h1 className="text-xl font-semibold text-[#12211c]">Provas</h1>
+          <p className="text-sm text-[#677e77] mt-0.5">Calendário de competições</p>
         </div>
         <Button onClick={() => setEditModal({ open: true, prova: null })}>
           <Plus className="w-4 h-4 mr-2" /> Nova Prova
@@ -153,15 +153,15 @@ export default function Provas() {
       </div>
 
       {/* Filter */}
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit mb-6">
+      <div className="flex gap-1 p-1 bg-[#f6f5f3] rounded-md w-fit mb-6">
         {['todas', ...CATEGORIAS].map(cat => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded text-xs font-medium transition-colors ${
               filter === cat
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-[#12211c] shadow-sm'
+                : 'text-[#677e77] hover:text-[#12211c]'
             }`}
           >
             {cat === 'todas' ? 'Todas' : cat}

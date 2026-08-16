@@ -59,34 +59,32 @@ function App() {
           <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar - exact Base44 colors */}
         <aside className={`
           fixed lg:relative z-50 h-full transition-all duration-200
-          ${collapsed ? 'w-16' : 'w-60'}
+          ${collapsed ? 'w-14' : 'w-56'}
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          flex flex-col bg-gray-900 text-gray-300
+          flex flex-col bg-[#12211c]
         `}>
           {/* Logo */}
-          <div className="flex items-center gap-3 px-5 h-14 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-sm">C</span>
+          <div className="flex items-center gap-2.5 px-4 h-14 shrink-0">
+            <div className="w-7 h-7 rounded bg-[#15803d] flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-[11px]">C</span>
             </div>
             {!collapsed && (
-              <div>
-                <span className="text-sm font-semibold text-white">Colombus</span>
-                <span className="text-[10px] text-gray-500 ml-1">2025</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-sm font-semibold text-[#ebe7e0]">Colombus</span>
+                <span className="text-[10px] text-[#677e77]">2025</span>
               </div>
             )}
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
             {navSections.map((section, si) => (
               <div key={si}>
                 {section.title && !collapsed && (
-                  <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                    {section.title}
-                  </p>
+                  <p className="px-3 mb-1 text-[10px] font-medium text-[#677e77] uppercase tracking-wider">{section.title}</p>
                 )}
                 <div className="space-y-0.5">
                   {section.items.map(item => (
@@ -96,15 +94,15 @@ function App() {
                       end={item.path === '/'}
                       onClick={() => setMobileOpen(false)}
                       className={({ isActive }) => `
-                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm
+                        flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px]
                         transition-colors
                         ${isActive
-                          ? 'bg-green-600/15 text-green-400 font-medium'
-                          : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                          ? 'bg-[#ebe7e0] text-[#12211c] font-medium'
+                          : 'text-[#ebe7e0]/60 hover:text-[#ebe7e0] hover:bg-white/5'
                         }
                       `}
                     >
-                      <item.icon className={`w-[18px] h-[18px] shrink-0 ${collapsed ? 'mx-auto' : ''}`} />
+                      <item.icon className={`w-4 h-4 shrink-0 ${collapsed ? 'mx-auto' : ''}`} />
                       {!collapsed && <span>{item.label}</span>}
                     </NavLink>
                   ))}
@@ -114,10 +112,10 @@ function App() {
           </nav>
 
           {/* Collapse */}
-          <div className="px-3 py-3 border-t border-gray-800 hidden lg:block">
+          <div className="px-2 py-2 border-t border-[#677e77]/20 hidden lg:block">
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-gray-300 w-full"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-[#677e77] hover:text-[#ebe7e0] w-full"
             >
               {collapsed
                 ? <ChevronRight className="w-4 h-4 mx-auto" />
@@ -128,16 +126,16 @@ function App() {
         </aside>
 
         {/* Main */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-y-auto bg-[#fbfaf9]">
           {/* Mobile header */}
-          <div className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-gray-200 bg-white sticky top-0 z-30">
-            <button onClick={() => setMobileOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-gray-100">
-              <Menu className="w-5 h-5 text-gray-600" />
+          <div className="lg:hidden flex items-center gap-3 px-4 h-12 border-b border-[#e5e7eb] bg-white sticky top-0 z-30">
+            <button onClick={() => setMobileOpen(true)} className="p-1.5 -ml-1 rounded hover:bg-[#f6f5f3]">
+              <Menu className="w-5 h-5 text-[#677e77]" />
             </button>
-            <span className="text-sm font-semibold text-gray-900">Colombus 2025</span>
+            <span className="text-sm font-semibold text-[#12211c]">Colombus 2025</span>
           </div>
 
-          <div className="p-8 max-w-5xl mx-auto">
+          <div className="p-6 lg:p-8 max-w-5xl mx-auto">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/provas" element={<Provas />} />

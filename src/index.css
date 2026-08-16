@@ -3,23 +3,27 @@
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  --color-background: #f9fafb;
-  --color-foreground: #111827;
+  --color-background: #fbfaf9;
+  --color-foreground: #12211c;
   --color-card: #ffffff;
-  --color-card-foreground: #111827;
-  --color-primary: #16a34a;
+  --color-card-foreground: #12211c;
+  --color-primary: #15803d;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f3f4f6;
-  --color-secondary-foreground: #374151;
-  --color-muted: #f3f4f6;
-  --color-muted-foreground: #6b7280;
-  --color-accent: #d97706;
-  --color-accent-foreground: #111827;
+  --color-secondary: #f6f5f3;
+  --color-secondary-foreground: #12211c;
+  --color-muted: #f6f5f3;
+  --color-muted-foreground: #677e77;
+  --color-accent: #b8860b;
+  --color-accent-foreground: #12211c;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
   --color-border: #e5e7eb;
   --color-input: #d1d5db;
-  --color-ring: #16a34a;
+  --color-ring: #15803d;
+  --color-sidebar: #12211c;
+  --color-sidebar-foreground: #ebe7e0;
+  --color-sidebar-active: #ebe7e0;
+  --color-sidebar-muted: #677e77;
   --radius: 0.5rem;
 }
 
@@ -29,7 +33,7 @@ body {
   background-color: var(--color-background);
   font-family: var(--font-sans);
   color: var(--color-foreground);
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 

@@ -182,10 +182,10 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+          <h1 className="text-xl font-semibold text-[#12211c]">{title}</h1>
+          <p className="text-sm text-[#677e77] mt-0.5">{subtitle}</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
@@ -193,7 +193,7 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <StatCard icon={Truck} label="Combustível" value={`R$ ${formatCurrency(totalCombustivel)}`} />
         <StatCard icon={Truck} label="Pedágio" value={`R$ ${formatCurrency(totalPedagio)}`} />
         <StatCard icon={Truck} label="Motorista" value={`R$ ${formatCurrency(totalMotorista)}`} />
@@ -202,9 +202,9 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
         <StatCard icon={Truck} label="Manutenção" value={`R$ ${formatCurrency(totalManut)}`} accent />
       </div>
 
-      <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 border border-amber-100 mb-6">
-        <span className="text-sm font-medium text-amber-800">Total Geral</span>
-        <span className="text-lg font-semibold text-amber-700">R$ {formatCurrency(totalGeral)}</span>
+      <div className="flex items-center justify-between p-4 rounded-md bg-[#fefce8] border border-[#fef9c3] mb-6">
+        <span className="text-sm font-medium text-[#b8860b]">Total Geral</span>
+        <span className="text-lg font-semibold text-[#b8860b]">R$ {formatCurrency(totalGeral)}</span>
       </div>
 
       {/* Table */}
