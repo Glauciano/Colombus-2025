@@ -4,11 +4,17 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
 
+// Limpar sessões de auth antigas que podem causar erros 400
+try {
+  const authKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.includes('-auth-token'));
+  authKeys.forEach(k => { localStorage.removeItem(k); console.log('[Supabase] Removed stale auth key:', k); });
+} catch (e) {}
+
 // Só cria o client se tiver as credenciais
 const hasCredentials = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 export const supabase = hasCredentials 
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { autoRefreshToken: false, persistSession: false } }) 
   : null;
 
 // Supabase ATIVO POR PADRÃO — usa nuvem ao invés de localStorage

@@ -1,7 +1,10 @@
-// Smart data layer: uses Supabase when explicitly enabled, localStorage otherwise
+// Smart data layer: uses Supabase REST API directly for full control
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const STORAGE_PREFIX = 'colombus_';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
 
 // Map local entity keys to Supabase table names
 const TABLE_MAP = {
@@ -15,6 +18,44 @@ const TABLE_MAP = {
   'venda_anilha': 'venda_anilha',
   'configuracao': 'configuracao',
 };
+
+// --- Direct Supabase REST API calls (bypasses JS client auth issues) ---
+const supabaseHeaders = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation',
+};
+
+async function supabaseRest(method, table, body = null, query = '') {
+  const url = `${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
+  const options = {
+    method,
+    headers: { ...supabaseHeaders },
+  };
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+  
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    const errorBody = await response.text();
+    let errorObj;
+    try { errorObj = JSON.parse(errorBody); } catch { errorObj = { message: errorBody }; }
+    console.error(`[Supabase REST] ${method} ${table} ERROR ${response.status}:`, errorObj);
+    const err = new Error(errorObj.message || `Supabase error ${response.status}`);
+    err.code = errorObj.code;
+    err.details = errorObj.details;
+    err.hint = errorObj.hint;
+    err.status = response.status;
+    throw err;
+  }
+  
+  const text = await response.text();
+  if (!text) return null;
+  return JSON.parse(text);
+}
 
 // --- localStorage CRUD ---
 function getKey(collection) {
@@ -55,14 +96,20 @@ export const localDb = {
 };
 
 // --- Supabase field transforms ---
-// custo_ribeirao and custo_franca seed data uses 'descricao' for city name,
-// but Supabase tables use 'cidade'. We transform on the way in/out.
-// Clean empty strings → null for Supabase
-// (empty strings cause "invalid input syntax" errors for DATE and INTEGER columns)
+
+// Clean values for Supabase:
+// - Empty strings → null (fixes "invalid input syntax" for DATE/INTEGER)
+// - NaN numbers → null
 function cleanForSupabase(obj) {
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
-    result[key] = (value === '') ? null : value;
+    if (value === '') {
+      result[key] = null;
+    } else if (typeof value === 'number' && isNaN(value)) {
+      result[key] = null;
+    } else {
+      result[key] = value;
+    }
   }
   return result;
 }
@@ -74,10 +121,12 @@ function toSupabase(item, collection) {
     result.cidade = result.descricao;
     delete result.descricao;
   }
-  // Clean internal fields
+  // Clean internal fields that should not be sent to Supabase
   delete result.createdAt;
   delete result.updatedAt;
   delete result.created_at;
+  delete result.user_id;
+  delete result.id;
   // Convert empty strings to null (fixes DATE/INTEGER errors in Supabase)
   return cleanForSupabase(result);
 }
@@ -92,7 +141,7 @@ function fromSupabase(item, collection) {
   return result;
 }
 
-// --- Smart db: Supabase when enabled, localStorage fallback ---
+// --- Smart db: Supabase REST when enabled, localStorage fallback ---
 export const db = {
   async list(collection) {
     if (!isSupabaseConfigured()) {
@@ -102,12 +151,11 @@ export const db = {
     if (!table) return localDb.list(collection);
     
     try {
-      if (!supabase) throw new Error('Supabase not initialized');
-      const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false, nullsFirst: false });
-      if (error) throw error;
+      const data = await supabaseRest('GET', table, null, 'select=*&order=created_at.desc');
       return (data || []).map(item => fromSupabase(item, collection));
     } catch (err) {
-      console.error(`Supabase list error (${collection}):`, err);
+      console.error(`Supabase list error (${collection}):`, err.message);
+      // For list, fall back to localStorage so the page isn't empty
       return localDb.list(collection);
     }
   },
@@ -119,17 +167,13 @@ export const db = {
     const table = TABLE_MAP[collection];
     if (!table) return localDb.create(collection, itemData);
     
-    try {
-      if (!supabase) throw new Error('Supabase not initialized');
-      const supItem = toSupabase(itemData, collection);
-      delete supItem.id;
-      const { data, error } = await supabase.from(table).insert([supItem]).select().single();
-      if (error) throw error;
-      return fromSupabase(data, collection);
-    } catch (err) {
-      console.error(`Supabase create error (${collection}):`, err);
-      return localDb.create(collection, itemData);
-    }
+    const supItem = toSupabase(itemData, collection);
+    console.log(`[db] CREATE ${collection}:`, JSON.stringify(supItem));
+    
+    const data = await supabaseRest('POST', table, supItem, 'select=*');
+    const result = Array.isArray(data) ? data[0] : data;
+    console.log(`[db] CREATE ${collection} OK:`, result);
+    return fromSupabase(result, collection);
   },
 
   async update(collection, id, itemData) {
@@ -139,19 +183,13 @@ export const db = {
     const table = TABLE_MAP[collection];
     if (!table) return localDb.update(collection, id, itemData);
     
-    try {
-      if (!supabase) throw new Error('Supabase not initialized');
-      const supItem = toSupabase(itemData, collection);
-      delete supItem.id;
-      delete supItem.created_at;
-      delete supItem.user_id;
-      const { data, error } = await supabase.from(table).update(supItem).eq('id', id).select().single();
-      if (error) throw error;
-      return fromSupabase(data, collection);
-    } catch (err) {
-      console.error(`Supabase update error (${collection}):`, err);
-      return localDb.update(collection, id, itemData);
-    }
+    const supItem = toSupabase(itemData, collection);
+    console.log(`[db] UPDATE ${collection} ${id}:`, JSON.stringify(supItem));
+    
+    const data = await supabaseRest('PATCH', table, supItem, `id=eq.${id}&select=*`);
+    const result = Array.isArray(data) ? data[0] : data;
+    console.log(`[db] UPDATE ${collection} OK:`, result);
+    return fromSupabase(result, collection);
   },
 
   async delete(collection, id) {
@@ -161,14 +199,9 @@ export const db = {
     const table = TABLE_MAP[collection];
     if (!table) return localDb.delete(collection, id);
     
-    try {
-      if (!supabase) throw new Error('Supabase not initialized');
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      if (error) throw error;
-    } catch (err) {
-      console.error(`Supabase delete error (${collection}):`, err);
-      localDb.delete(collection, id);
-    }
+    console.log(`[db] DELETE ${collection} ${id}`);
+    await supabaseRest('DELETE', table, null, `id=eq.${id}`);
+    console.log(`[db] DELETE ${collection} OK`);
   }
 };
 
