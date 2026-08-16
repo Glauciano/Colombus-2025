@@ -91,6 +91,7 @@ export const db = {
     if (!table) return localDb.list(collection);
     
     try {
+      if (!supabase) throw new Error('Supabase not initialized');
       const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false, nullsFirst: false });
       if (error) throw error;
       return (data || []).map(item => fromSupabase(item, collection));
@@ -108,6 +109,7 @@ export const db = {
     if (!table) return localDb.create(collection, itemData);
     
     try {
+      if (!supabase) throw new Error('Supabase not initialized');
       const supItem = toSupabase(itemData, collection);
       delete supItem.id;
       const { data, error } = await supabase.from(table).insert([supItem]).select().single();
@@ -127,6 +129,7 @@ export const db = {
     if (!table) return localDb.update(collection, id, itemData);
     
     try {
+      if (!supabase) throw new Error('Supabase not initialized');
       const supItem = toSupabase(itemData, collection);
       delete supItem.id;
       delete supItem.created_at;
@@ -148,6 +151,7 @@ export const db = {
     if (!table) return localDb.delete(collection, id);
     
     try {
+      if (!supabase) throw new Error('Supabase not initialized');
       const { error } = await supabase.from(table).delete().eq('id', id);
       if (error) throw error;
     } catch (err) {

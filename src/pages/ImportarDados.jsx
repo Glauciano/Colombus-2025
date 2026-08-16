@@ -47,7 +47,7 @@ export default function ImportarDados() {
   const [pushResults, setPushResults] = React.useState({});
 
   const testSupabase = async () => {
-    if (!hasSupabaseCredentials()) {
+    if (!hasSupabaseCredentials() || !supabase) {
       setSupabaseStatus('error');
       return;
     }
@@ -63,6 +63,7 @@ export default function ImportarDados() {
   };
 
   const pushToSupabase = async () => {
+    if (!supabase) { setPushStatus('done'); return; }
     setPushStatus('pushing');
     setPushResults({});
     const newResults = {};
