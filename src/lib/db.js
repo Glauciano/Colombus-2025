@@ -57,6 +57,16 @@ export const localDb = {
 // --- Supabase field transforms ---
 // custo_ribeirao and custo_franca seed data uses 'descricao' for city name,
 // but Supabase tables use 'cidade'. We transform on the way in/out.
+// Clean empty strings → null for Supabase
+// (empty strings cause "invalid input syntax" errors for DATE and INTEGER columns)
+function cleanForSupabase(obj) {
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = (value === '') ? null : value;
+  }
+  return result;
+}
+
 function toSupabase(item, collection) {
   const result = { ...item };
   // Map descricao -> cidade for Supabase tables that have cidade column
@@ -68,7 +78,8 @@ function toSupabase(item, collection) {
   delete result.createdAt;
   delete result.updatedAt;
   delete result.created_at;
-  return result;
+  // Convert empty strings to null (fixes DATE/INTEGER errors in Supabase)
+  return cleanForSupabase(result);
 }
 
 function fromSupabase(item, collection) {
