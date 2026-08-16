@@ -142,26 +142,26 @@ export default function Provas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>Provas</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Calendário de competições de pombos-correio</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Provas</h1>
+          <p className="text-sm text-gray-500 mt-1">Calendário de competições</p>
         </div>
-        <Button onClick={() => setEditModal({ open: true, prova: null })} className="shadow-primary/20">
+        <Button onClick={() => setEditModal({ open: true, prova: null })}>
           <Plus className="w-4 h-4 mr-2" /> Nova Prova
         </Button>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 p-1 rounded-xl bg-muted/50 w-fit">
+      {/* Filter */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit mb-6">
         {['todas', ...CATEGORIAS].map(cat => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
               filter === cat
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {cat === 'todas' ? 'Todas' : cat}

@@ -182,23 +182,18 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'hsl(160 45% 22%)' }}>{title}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+          <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPDF}>
-            <Download className="w-4 h-4 mr-2" /> PDF
-          </Button>
-          <Button onClick={() => setEditModal({ open: true, custo: null })}>
-            <Plus className="w-4 h-4 mr-2" /> Novo Custo
-          </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={exportPDF}><Download className="w-4 h-4 mr-2" /> PDF</Button>
+          <Button onClick={() => setEditModal({ open: true, custo: null })}><Plus className="w-4 h-4 mr-2" /> Novo Custo</Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
         <StatCard icon={Truck} label="Combustível" value={`R$ ${formatCurrency(totalCombustivel)}`} />
         <StatCard icon={Truck} label="Pedágio" value={`R$ ${formatCurrency(totalPedagio)}`} />
         <StatCard icon={Truck} label="Motorista" value={`R$ ${formatCurrency(totalMotorista)}`} />
@@ -207,13 +202,9 @@ export default function CustosPage({ entity, title, subtitle, pdfName }) {
         <StatCard icon={Truck} label="Manutenção" value={`R$ ${formatCurrency(totalManut)}`} accent />
       </div>
 
-      {/* Total */}
-      <div className="flex items-center justify-between p-4 rounded-xl border border-accent/20" style={{ background: 'linear-gradient(135deg, hsl(42 85% 55% / 8%) 0%, hsl(42 85% 55% / 3%) 100%)' }}>
-        <div className="flex items-center gap-2">
-          <Truck className="w-5 h-5 text-accent" />
-          <span className="font-semibold">Total Geral</span>
-        </div>
-        <span className="text-2xl font-bold" style={{ color: 'hsl(42 85% 55%)' }}>R$ {formatCurrency(totalGeral)}</span>
+      <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 border border-amber-100 mb-6">
+        <span className="text-sm font-medium text-amber-800">Total Geral</span>
+        <span className="text-lg font-semibold text-amber-700">R$ {formatCurrency(totalGeral)}</span>
       </div>
 
       {/* Table */}
