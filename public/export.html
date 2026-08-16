@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Colombus - Exportador de Dados</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a3a2a; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { max-width: 600px; width: 90%; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+    h1 { font-size: 24px; color: #1a5c34; margin-bottom: 8px; }
+    p { color: #666; margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
+    .step { background: #f9faf6; border-radius: 12px; padding: 16px; margin: 12px 0; border-left: 4px solid #d4a030; }
+    .step h3 { color: #1a5c34; margin-bottom: 4px; font-size: 14px; }
+    .step p { margin-bottom: 0; font-size: 13px; }
+    textarea { width: 100%; height: 200px; border: 2px solid #e0e0d8; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; resize: vertical; margin: 12px 0; }
+    textarea:focus { outline: none; border-color: #1a5c34; }
+    button { background: #1a5c34; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
+    button:hover { background: #14472a; }
+    button:disabled { background: #999; cursor: not-allowed; }
+    .btn-secondary { background: #d4a030; margin-top: 8px; }
+    .btn-secondary:hover { background: #b8881a; }
+    .result { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 13px; }
+    .result.ok { background: #e8f5e9; color: #2e7d32; }
+    .result.erro { background: #fde8e8; color: #c62828; }
+    .loading { display: inline-block; width: 16px; height: 16px; border: 3px solid #ffffff40; border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    kbd { background: #e8e8e0; padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid #d0d0c8; }
+    .note { background: #fff8e1; border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 13px; color: #8d6e00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐦 Exportador Colombus 2025</h1>
+    <p>Exporte todos os dados do app original do Base44</p>
+
+    <div class="step">
+      <h3>① Primeiro, abra o app original em outra aba:</h3>
+      <p><a href="https://colombus-race-pro.base44.app" target="_blank" style="color:#1a5c34;font-weight:600;">Clique aqui para abrir o app original →</a> e faça login com Google.</p>
+    </div>
+
+    <div class="step">
+      <h3>② Depois de logado, volte aqui e clique o botão abaixo:</h3>
+      <p>O botão vai buscar os dados automaticamente usando o token que já está no navegador.</p>
+    </div>
+
+    <button id="btnExport" onclick="exportData()">🔗 Buscar Dados do App Original</button>
+
+    <div id="status"></div>
+    <div id="results"></div>
+    <textarea id="output" placeholder="Os dados exportados vão aparecer aqui..." style="display:none"></textarea>
+    <button id="btnCopy" onclick="copyData()" style="display:none">📋 Copiar Dados para Clipboard</button>
+    
+    <div class="note" id="nextStep" style="display:none">
+      <strong>Próximo passo:</strong> Depois de copiar, vá no <strong>app novo</strong> → clique em <strong>"Importar Dados"</strong> na sidebar → cole os dados e clique <strong>"Importar"</strong>
+    </div>
+  </div>
+
+  <script>
+    const BASE44_URL = 'https://colombus-race-pro.base44.app';
+    const APP_ID = '69e5f2248495fbc2168e1748';
+    const ENTITIES = ['Prova', 'CustoLogistico', 'CustoRibeiraoPreto', 'CustoFranca', 'RecebiveisRibeiraoPreto', 'RecebiveisFranca', 'SocioLimeira', 'Configuracao'];
+
+    async function exportData() {
+      const btn = document.getElementById('btnExport');
+      const status = document.getElementById('status');
+      const results = document.getElementById('results');
+      const output = document.getElementById('output');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Buscando dados...';
+      status.innerHTML = '<div class="result">Tentando buscar o token de autenticação...</div>';
+      results.innerHTML = '';
+
+      // Try to get token from localStorage of the same origin
+      let token = localStorage.getItem('base44_access_token') || localStorage.getItem('token');
+
+      if (!token) {
+        // The user is on a different origin. We need to make the requests with credentials
+        status.innerHTML = '<div class="result erro">❌ Token não encontrado neste site. Você precisa abrir esta página DENTRO do app original.</div>';
+        
+        results.innerHTML = `
+          <div class="step" style="border-left-color: #c62828;">
+            <h3>⚠️ Solução: Abra esta página DENTRO do app original</h3>
+            <p>No app original (logado), aperte <kbd>F12</kbd> → Console → digite <kbd>allow pasting</kbd> → Enter → depois cole:</p>
+            <code style="display:block;padding:8px;background:#f5f5f0;border-radius:4px;font-size:11px;word-break:break-all;margin:8px 0;">window.open(location.origin + '/export.html')</code>
+            <p style="margin-top:8px;">Ou simplesmente cole este código no Console do app original (depois de digitar <kbd>allow pasting</kbd>):</p>
+          </div>
+        `;
+        
+        // Show the direct console approach
+        results.innerHTML += `
+          <div style="margin-top:12px">
+            <p style="margin-bottom:8px"><strong>Cole isto no Console do app original</strong> (depois de digitar <kbd>allow pasting</kbd> e Enter):</p>
+            <textarea id="codeBlock" style="height:60px;font-size:10px;cursor:pointer" onclick="this.select();document.execCommand('copy');this.nextElementSibling.style.display='block'" readonly>(async()=>{const t=localStorage.getItem("base44_access_token")||localStorage.getItem("token");if(!t)return console.log("❌ Sem token");const e=["Prova","CustoLogistico","CustoRibeiraoPreto","CustoFranca","RecebiveisRibeiraoPreto","RecebiveisFranca","SocioLimeira","Configuracao"],d={};for(const n of e){const r=await fetch("/api/entities/"+n,{headers:{Authorization:"Bearer "+t}});d[n]=await r.json();console.log(n+": "+(Array.isArray(d[n])?d[n].length+" ✓":"❌"))}window.__D=JSON.stringify(d);console.log("✅ Copiando...");copy(window.__D);console.log("✅ Dados copiados! Cole no app novo")})()</textarea>
+            <span style="display:none;color:#2e7d32;font-size:12px">✅ Código copiado!</span>
+          </div>
+        `;
+        
+        btn.disabled = false;
+        btn.innerHTML = '🔗 Buscar Dados do App Original';
+        return;
+      }
+
+      // We have a token! Fetch all data
+      const allData = {};
+      let html = '<div style="margin-top:12px">';
+      let totalRecords = 0;
+
+      for (const entity of ENTITIES) {
+        try {
+          const res = await fetch(`${BASE44_URL}/api/entities/${entity}`, {
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            allData[entity] = data;
+            const count = Array.isArray(data) ? data.length : 0;
+            totalRecords += count;
+            html += `<div class="result ok" style="margin:4px 0;padding:8px">✅ ${entity}: ${count} registros</div>`;
+          } else {
+            allData[entity] = [];
+            html += `<div class="result erro" style="margin:4px 0;padding:8px">❌ ${entity}: HTTP ${res.status}</div>`;
+          }
+        } catch (err) {
+          allData[entity] = [];
+          html += `<div class="result erro" style="margin:4px 0;padding:8px">❌ ${entity}: ${err.message}</div>`;
+        }
+      }
+
+      html += `<div class="result ok" style="margin-top:8px;font-weight:600;font-size:16px">🎉 Total: ${totalRecords} registros exportados!</div>`;
+      html += '</div>';
+
+      status.innerHTML = `<div class="result ok">✅ Exportação concluída! ${totalRecords} registros no total</div>`;
+      results.innerHTML = html;
+
+      // Show output
+      output.style.display = 'block';
+      output.value = JSON.stringify(allData, null, 2);
+      
+      document.getElementById('btnCopy').style.display = 'block';
+      document.getElementById('nextStep').style.display = 'block';
+
+      btn.disabled = false;
+      btn.innerHTML = '🔗 Buscar Dados Novamente';
+    }
+
+    function copyData() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      
+      const btn = document.getElementById('btnCopy');
+      btn.innerHTML = '✅ Copiado!';
+      btn.style.background = '#2e7d32';
+      
+      setTimeout(() => {
+        btn.innerHTML = '📋 Copiar Dados para Clipboard';
+        btn.style.background = '#d4a030';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
