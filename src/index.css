@@ -1,49 +1,56 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", sans-serif;
   --font-display: "Playfair Display", serif;
-  --color-background: #faf8f3;
-  --color-foreground: #12211c;
-  --color-card: #ffffff;
-  --color-card-foreground: #12211c;
-  --color-primary: #1a5c3d;
-  --color-primary-foreground: #faf8f3;
-  --color-secondary: #f0ebe0;
-  --color-secondary-foreground: #1a2b23;
-  --color-muted: #f0ede7;
-  --color-muted-foreground: #6b8a7e;
-  --color-accent: #e5a51b;
-  --color-accent-foreground: #12211c;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #faf8f3;
-  --color-border: #e5ddd1;
-  --color-input: #e5ddd1;
-  --color-ring: #1a5c3d;
-  --color-sidebar: #12211c;
-  --color-sidebar-foreground: #e8e2d7;
-  --color-sidebar-active: #233f32;
-  --color-sidebar-muted: #6b8a7e;
-  --color-chart-1: #1a5c3d;
-  --color-chart-2: #e5a51b;
-  --color-chart-3: #6b8a7e;
-  --color-chart-4: #dc2626;
+  /* EXACT Base44 HSL colors converted */
+  --color-background: hsl(40 20% 98%);
+  --color-foreground: hsl(160 30% 10%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(160 30% 10%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(160 30% 10%);
+  --color-primary: hsl(160 45% 22%);
+  --color-primary-foreground: hsl(40 20% 98%);
+  --color-secondary: hsl(40 30% 93%);
+  --color-secondary-foreground: hsl(160 30% 15%);
+  --color-muted: hsl(40 15% 94%);
+  --color-muted-foreground: hsl(160 10% 45%);
+  --color-accent: hsl(42 85% 55%);
+  --color-accent-foreground: hsl(160 30% 10%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(40 15% 88%);
+  --color-input: hsl(40 15% 88%);
+  --color-ring: hsl(160 45% 22%);
+  --color-chart-1: hsl(160 45% 22%);
+  --color-chart-2: hsl(42 85% 55%);
+  --color-chart-3: hsl(200 50% 45%);
+  --color-chart-4: hsl(30 70% 50%);
+  --color-chart-5: hsl(280 40% 50%);
+  --color-sidebar-background: hsl(160 30% 10%);
+  --color-sidebar-foreground: hsl(40 20% 90%);
+  --color-sidebar-primary: hsl(42 85% 55%);
+  --color-sidebar-primary-foreground: hsl(160 30% 10%);
+  --color-sidebar-accent: hsl(160 25% 18%);
+  --color-sidebar-accent-foreground: hsl(40 20% 90%);
+  --color-sidebar-border: hsl(160 20% 20%);
+  --color-sidebar-ring: hsl(42 85% 55%);
   --radius: 0.75rem;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  border-color: hsl(40 15% 88%);
+  outline-color: hsl(160 45% 22% / 0.5);
+}
 
 body {
-  background-color: var(--color-background);
-  font-family: var(--font-sans);
-  color: var(--color-foreground);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(40 20% 98%);
+  font-family: "Inter", sans-serif;
+  color: hsl(160 30% 10%);
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-thumb { background: hsl(40 15% 88%); border-radius: 3px; }
