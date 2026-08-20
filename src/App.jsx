@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Trophy, Truck, Wallet, Users,
-  ChevronLeft, Menu, CircleDot, Settings, ChevronRight, MapPin
+  ChevronLeft, Menu, CircleDot, Settings, ChevronRight, MapPin, LogOut
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
@@ -14,7 +14,9 @@ import CCLimeira from './pages/CCLimeira';
 import VendaAnilhas from './pages/VendaAnilhas';
 import ImportarDados from './pages/ImportarDados';
 import CidadesConfig from './pages/CidadesConfig';
+import Login from './pages/Login';
 import { db, ENTITIES } from './lib/db';
+import { supabase } from './lib/supabaseClient';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
@@ -47,6 +49,46 @@ function App() {
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [cidades, setCidades] = React.useState(['Ribeirão Preto', 'Franca S.P', 'Limeira']);
+  const [user, setUser] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
+
+  // Check if user is already logged in
+  React.useEffect(() => {
+    if (!supabase) { setAuthLoading(false); return; }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = (u) => setUser(u);
+  const handleLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  // Show loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-sidebar-primary flex items-center justify-center mx-auto mb-4">
+            <span className="text-sidebar-primary-foreground font-bold text-2xl" style={{ fontFamily: '"Playfair Display", serif' }}>C</span>
+          </div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   // Load cidades from Supabase on mount
   React.useEffect(() => {
@@ -157,16 +199,25 @@ function App() {
             ))}
           </nav>
 
-          <div className="px-3 py-3 border-t border-sidebar-border hidden lg:block">
+          {/* Collapse toggle + Logout */}
+          <div className="px-3 py-3 border-t border-sidebar-border space-y-1 hidden lg:block">
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full transition-colors"
             >
               {collapsed
                 ? <ChevronRight className="w-4 h-4 mx-auto" />
-                : <><ChevronLeft className="w-4 w-4" /><span>Recolher</span></>
+                : <><ChevronLeft className="w-4 h-4" /><span>Recolher</span></>
               }
             </button>
+            {!collapsed && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-xs text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors"
+              >
+                <LogOut className="w-4 h-4" /><span>Sair</span>
+              </button>
+            )}
           </div>
         </aside>
 
