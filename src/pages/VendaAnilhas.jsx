@@ -215,10 +215,7 @@ export default function VendaAnilhas() {
   const [dbError, setDbError] = React.useState('');
   const { data: vendas, isLoading, refresh, remove: deleteVenda } = useCollection(ENTITIES.VENDA_ANILHA);
 
-  // Clear error when data loads successfully
-  React.useEffect(() => {
-    if (vendas.length >= 0 && !isLoading) setDbError('');
-  }, [vendas, isLoading]);
+  // dbError is set on error conditions and cleared on successful operations
 
   const filtered = vendas
     .filter(v => {

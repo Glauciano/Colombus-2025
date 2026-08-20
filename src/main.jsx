@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
 
 // Seed data is no longer needed — all data is in Supabase
@@ -17,7 +18,7 @@ const KEYS_TO_CLEAN = [
 KEYS_TO_CLEAN.forEach(k => localStorage.removeItem(k));
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <ErrorBoundary>
     <App />
-  </React.StrictMode>,
+  </ErrorBoundary>,
 )

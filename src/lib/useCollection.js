@@ -1,45 +1,47 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from './db';
 
 // React hook that wraps db.list() with auto-refresh
-// Usage: const { data, isLoading, error, refresh } = useCollection('provas');
+// Usage: const { data, isLoading, error, refresh, create, update, remove } = useCollection('provas');
 export function useCollection(collection) {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const collectionRef = useRef(collection);
+  collectionRef.current = collection;
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await db.list(collection);
+      const result = await db.list(collectionRef.current);
       setData(result);
     } catch (err) {
-      console.error(`Error loading ${collection}:`, err);
+      console.error(`Error loading ${collectionRef.current}:`, err);
       setError(err?.message || String(err));
       setData([]);
     }
     setIsLoading(false);
-  }, [collection]);
+  }, []); // stable — uses ref for collection name
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   const create = async (item) => {
-    const result = await db.create(collection, item);
+    const result = await db.create(collectionRef.current, item);
     await refresh();
     return result;
   };
 
   const update = async (id, item) => {
-    const result = await db.update(collection, id, item);
+    const result = await db.update(collectionRef.current, id, item);
     await refresh();
     return result;
   };
 
   const remove = async (id) => {
-    await db.delete(collection, id);
+    await db.delete(collectionRef.current, id);
     await refresh();
   };
 

@@ -10,15 +10,16 @@ try {
   authKeys.forEach(k => { localStorage.removeItem(k); });
 } catch (e) {}
 
-// Cria o client com auth habilitado
+// Cria o client com auth desabilitado para evitar loops de re-render
+// Auth será re-habilitado quando o login for configurado corretamente
 const hasCredentials = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 export const supabase = hasCredentials 
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { 
       auth: { 
-        autoRefreshToken: true, 
-        persistSession: true,
-        detectSessionInUrl: true
+        autoRefreshToken: false, 
+        persistSession: false,
+        detectSessionInUrl: false
       } 
     }) 
   : null;

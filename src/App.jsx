@@ -50,45 +50,24 @@ function App() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [cidades, setCidades] = React.useState(['Ribeirão Preto', 'Franca S.P', 'Limeira']);
   const [user, setUser] = React.useState(null);
-  const [authLoading, setAuthLoading] = React.useState(true);
 
-  // Check if user is already logged in
-  React.useEffect(() => {
-    if (!supabase) { setAuthLoading(false); return; }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      setAuthLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
+  // Auth is disabled for now — login page exists at /login but is not active
+  // To re-enable: uncomment the login check below AND set up Supabase Auth
   const handleLogin = (u) => setUser(u);
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
     setUser(null);
   };
 
-  // Show loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-sidebar-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-sidebar-primary-foreground font-bold text-2xl" style={{ fontFamily: '"Playfair Display", serif' }}>C</span>
-          </div>
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login page if not authenticated
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
-  }
+  // Login is optional — app works without it
+  // To enable login, uncomment the block below:
+  // if (!user) {
+  //   return <Login onLogin={handleLogin} />;
+  // }
 
   // Load cidades from Supabase on mount
   React.useEffect(() => {
@@ -238,6 +217,7 @@ function App() {
               <Route path="/custos" element={<Custos />} />
               <Route path="/cidades" element={<CidadesConfig />} />
               <Route path="/importar" element={<ImportarDados />} />
+              <Route path="/login" element={<Login onLogin={handleLogin} />} />
 
               {/* Dynamic city routes */}
               <Route path="/custos-ribeirao-preto" element={<CustosBase entity={ENTITIES.CUSTO_RIBEIRAO} title="Custos Ribeirão Preto" subtitle="Gastos logísticos - Ribeirão Preto" pdfName="custos-ribeirao-preto.pdf" />} />
