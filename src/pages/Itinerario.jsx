@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
+import { DateField, TimeField } from '../components/ui/datetime';
 
 // ---- Config padrão (editável, salva no Supabase) ----
 const DEFAULT_CFG = {
@@ -30,34 +31,46 @@ function fmtDur(min) { const m=Math.round(min),h=Math.floor(m/60),x=m%60; if(h&&
 function calcSaida(prova, cfg) {
   const km = Number(prova.km) || 0;
   const v = Number(cfg.velocidade) || 90;
-  const [hh, mm] = (cfg.hora_solta || '07:00').split(':').map(n => Number(n) || 0);
+  // Hora da solta: usa a hora individual da prova (dia_solta) ou a global
+  const horaSoltaStr = prova.dia_solta || cfg.hora_solta || '07:00';
+  const [hh, mm] = horaSoltaStr.split(':').map(n => Number(n) || 0);
   const drive = v > 0 ? (km / v) * 60 : 0;
   const paradas = (cfg.paradas || []).reduce((s,p) => s + (Number(p.tempo) || 0), 0);
   const tot = drive + paradas;
 
   let solta = new Date();
-  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${cfg.hora_solta}:00`);
+  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${horaSoltaStr}:00`);
   else solta.setHours(hh, mm, 0, 0);
   const saida = new Date(solta.getTime() - tot * 60000);
 
-  return { km, drive, paradas, tot, solta, saida };
+  return { km, drive, paradas, tot, solta, saida, horaSoltaStr };
 }
 
-// ---- Formulário: edita a data de solta (e embarque) com calendário ----
+// ---- Formulário: edita data e hora de embarque/solta ----
 function DataForm({ prova, onSave, onClose }) {
   const [emb, setEmb] = React.useState(prova.data_embarque?.slice(0,10) || '');
+  const [embHora, setEmbHora] = React.useState(prova.dia_embarque || '');
   const [sol, setSol] = React.useState(prova.data_solta?.slice(0,10) || '');
+  const [solHora, setSolHora] = React.useState(prova.dia_solta || '');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ data_embarque: emb, dia_embarque: embHora, data_solta: sol, dia_solta: solHora });
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Itinerário — {prova.cidade}</DialogTitle>
-          <DialogDescription>Escolha as datas no calendário. O horário de sair de Limeira é recalculado na hora.</DialogDescription>
+          <DialogDescription>Escolha a data e a hora de embarque e de solta.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={e => { e.preventDefault(); onSave({ data_embarque: emb, data_solta: sol }); }} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2"><Label>Data Embarque</Label><Input type="date" value={emb} onChange={e => setEmb(e.target.value)} /></div>
-            <div className="space-y-2"><Label>Data Solta</Label><Input type="date" value={sol} onChange={e => setSol(e.target.value)} /></div>
+            <DateField label="Data Embarque" value={emb} onChange={setEmb} />
+            <TimeField label="Hora Embarque" value={embHora} onChange={setEmbHora} />
+            <DateField label="Data Solta" value={sol} onChange={setSol} />
+            <TimeField label="Hora Solta" value={solHora} onChange={setSolHora} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
@@ -117,14 +130,19 @@ export default function Itinerario() {
   const updateCfg = (patch) => setCfg(prev => ({ ...prev, ...patch }));
   const updateParada = (i, f, v) => setCfg(prev => ({ ...prev, paradas: prev.paradas.map((p,idx) => idx===i ? { ...p, [f]: v } : p) }));
 
-  // Salvar datas editadas
-  const handleFormSave = async (datas) => {
+  // Salvar datas/horas editadas
+  const handleFormSave = async (dados) => {
     try {
-      await db.update(ENTITIES.PROVA, editModal.prova.id, { data_embarque: datas.data_embarque, data_solta: datas.data_solta });
+      await db.update(ENTITIES.PROVA, editModal.prova.id, {
+        data_embarque: dados.data_embarque || null,
+        dia_embarque: dados.dia_embarque || null,
+        data_solta: dados.data_solta || null,
+        dia_solta: dados.dia_solta || null,
+      });
       await refresh();
     } catch (e) {
       console.error(e);
-      alert('Não foi possível salvar as datas. Verifique sua conexão.');
+      alert('Não foi possível salvar. Verifique sua conexão.');
     } finally {
       setEditModal({ open: false, prova: null });
     }
@@ -186,7 +204,7 @@ export default function Itinerario() {
               <TableRow>
                 <TableHead>Cidade</TableHead>
                 <TableHead>KM</TableHead>
-                <TableHead>Data Solta</TableHead>
+                <TableHead>Solta</TableHead>
                 <TableHead>⏰ Sair de Limeira</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
@@ -198,7 +216,9 @@ export default function Itinerario() {
                   <TableRow key={prova.id}>
                     <TableCell className="font-medium">{prova.cidade || '—'}</TableCell>
                     <TableCell>{c.km}</TableCell>
-                    <TableCell>{formatDate(prova.data_solta)} · {cfg.hora_solta}</TableCell>
+                    <TableCell>
+                      {formatDate(prova.data_solta)} {prova.dia_solta ? <span className="text-muted-foreground text-xs">({prova.dia_solta})</span> : null}
+                    </TableCell>
                     <TableCell>
                       <div>
                         <span className="text-primary font-semibold">{formatTime(c.saida)}</span>
