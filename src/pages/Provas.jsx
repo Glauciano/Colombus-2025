@@ -9,7 +9,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
-import { DateField, TimeField } from '../components/ui/datetime';
 
 const CATEGORIAS = ['Copa Filhotes', 'Campeonato Adultos'];
 const STATUS_OPTIONS = ['Programada', 'Em Andamento', 'Concluída', 'Cancelada'];
@@ -74,10 +73,10 @@ function ProvaForm({ prova, onSave, onClose }) {
                 {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div className="space-y-2"><Label>Data Embarque</Label><DateField value={form.data_embarque} onChange={v => handleChange('data_embarque', v)} /></div>
-            <div className="space-y-2"><Label>Hora Embarque</Label><TimeField value={form.dia_embarque} onChange={v => handleChange('dia_embarque', v)} /></div>
-            <div className="space-y-2"><Label>Data Solta</Label><DateField value={form.data_solta} onChange={v => handleChange('data_solta', v)} /></div>
-            <div className="space-y-2"><Label>Hora Solta</Label><TimeField value={form.dia_solta} onChange={v => handleChange('dia_solta', v)} /></div>
+            <div className="space-y-2"><Label>Data Embarque</Label><Input type="date" value={form.data_embarque} onChange={e => handleChange('data_embarque', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Dia Embarque</Label><Input value={form.dia_embarque} onChange={e => handleChange('dia_embarque', e.target.value)} placeholder="Sexta" /></div>
+            <div className="space-y-2"><Label>Data Solta</Label><Input type="date" value={form.data_solta} onChange={e => handleChange('data_solta', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Dia Solta</Label><Input value={form.dia_solta} onChange={e => handleChange('dia_solta', e.target.value)} placeholder="Sábado" /></div>
             <div className="space-y-2"><Label>Valor (R$)</Label><Input type="number" step="0.01" value={form.valor} onChange={e => handleChange('valor', e.target.value)} /></div>
             <div className="space-y-2"><Label>Status</Label>
               <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" value={form.status} onChange={e => handleChange('status', e.target.value)}>
@@ -134,8 +133,8 @@ export default function Provas() {
                 <TableHead>Cidade</TableHead>
                 <TableHead>KM</TableHead>
                 <TableHead>Categoria</TableHead>
-                <TableHead>Embarque</TableHead>
-                <TableHead>Solta</TableHead>
+                <TableHead>Data Embarque</TableHead>
+                <TableHead>Data Solta</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
@@ -147,8 +146,8 @@ export default function Provas() {
                   <TableCell className="font-medium">{prova.cidade || '—'}</TableCell>
                   <TableCell>{prova.km || '—'}</TableCell>
                   <TableCell><Badge variant="secondary">{prova.categoria}</Badge></TableCell>
-                  <TableCell>{formatDate(prova.data_embarque)} {prova.dia_embarque ? <span className="text-muted-foreground text-xs">({prova.dia_embarque})</span> : null}</TableCell>
-                  <TableCell>{formatDate(prova.data_solta)} {prova.dia_solta ? <span className="text-muted-foreground text-xs">({prova.dia_solta})</span> : null}</TableCell>
+                  <TableCell>{formatDate(prova.data_embarque)}</TableCell>
+                  <TableCell>{formatDate(prova.data_solta)}</TableCell>
                   <TableCell>{prova.valor ? `R$ ${formatCurrency(prova.valor)}` : '—'}</TableCell>
                   <TableCell><Badge variant={statusVariant[prova.status] || 'default'}>{prova.status || 'Programada'}</Badge></TableCell>
                   <TableCell>

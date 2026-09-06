@@ -2,12 +2,11 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Trophy, Truck, Wallet, Users,
-  ChevronLeft, Menu, CircleDot, Settings, ChevronRight, MapPin, LogOut, Route as RouteIcon
+  ChevronLeft, Menu, CircleDot, Settings, ChevronRight, MapPin, LogOut
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
 import Provas from './pages/Provas';
-import Itinerario from './pages/Itinerario';
 import Custos from './pages/Custos';
 import CustosBase from './pages/CustosBase';
 import CCBase from './pages/CCBase';
@@ -108,7 +107,6 @@ function App() {
         items: [
           { path: '/', label: 'Painel', icon: LayoutDashboard },
           { path: '/provas', label: 'Provas', icon: Trophy },
-          { path: '/itinerario', label: 'Itinerário', icon: RouteIcon },
           { path: '/venda-anilhas', label: 'Venda de Anilhas', icon: CircleDot },
         ]
       },
@@ -215,7 +213,6 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/provas" element={<Provas />} />
-              <Route path="/itinerario" element={<Itinerario />} />
               <Route path="/venda-anilhas" element={<VendaAnilhas />} />
               <Route path="/custos" element={<Custos />} />
               <Route path="/cidades" element={<CidadesConfig />} />
