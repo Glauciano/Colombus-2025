@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { DateField, TimeField } from '../components/ui/datetime';
+import { isTime, parseTime, formatHMS } from '../lib/dates';
 
 const DIAS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
@@ -22,9 +23,9 @@ const DEFAULT_CFG = {
 };
 
 function pad(n) { return String(n).padStart(2, '0'); }
-function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 function fmtDate(d) { return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`; }
-function dayName(d) { return DIAS[d.getDay()]; }
+function dayNameOf(d) { return DIAS[d.getDay()]; }
 function fmtDur(min) { const m=Math.round(min),h=Math.floor(m/60),x=m%60; if(h&&x)return `${h}h${pad(x)}`; if(h)return `${h}h`; return `${x}min`; }
 
 // Calcula os horários usando a DATA e a HORA de solta definidas para a prova
@@ -36,13 +37,17 @@ function calcLinhas(prova, cfg) {
   const paradas = (cfg.paradas || []).reduce((s,p) => s + (Number(p.tempo) || 0), 0);
   const embLimeira = Number(cfg.embargoLimeira) || 0;
 
-  // Hora de solta definida pelo usuário (dia_solta guarda a hora, ex.: "06:30")
-  const horaSolta = prova.dia_solta || '07:00';
-  const [ hh, mm ] = horaSolta.split(':').map(n => Number(n) || 0);
+  // Hora de solta definida pelo usuário (dia_solta guarda a hora, ex.: "06:30:00")
+  // Se o valor antigo for um nome de dia ("Domingo"), usa 07:00:00 como padrão.
+  const horaSolta = isTime(prova.dia_solta) ? formatHMS(prova.dia_solta) : '07:00:00';
+  const t = parseTime(horaSolta);
 
   let solta = new Date();
-  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${horaSolta}:00`);
-  else solta.setHours(hh, mm, 0, 0);
+  if (prova.data_solta) {
+    solta = new Date(`${prova.data_solta}T${horaSolta}`);
+  } else {
+    solta.setHours(t.h, t.m, t.s, 0);
+  }
 
   const saida = new Date(solta.getTime() - (viagem + paradas) * 60000);
   const inicioEmb = new Date(saida.getTime() - embLimeira * 60000);
@@ -53,9 +58,9 @@ function calcLinhas(prova, cfg) {
 // ---- Formulário: data e hora de embarque e de solta (editável, salva de verdade) ----
 function ProvaForm({ prova, onSave, onClose }) {
   const [dataEmb, setDataEmb] = React.useState(prova.data_embarque?.slice(0,10) || '');
-  const [horaEmb, setHoraEmb] = React.useState(prova.dia_embarque || '');
+  const [horaEmb, setHoraEmb] = React.useState(isTime(prova.dia_embarque) ? formatHMS(prova.dia_embarque) : '');
   const [dataSol, setDataSol] = React.useState(prova.data_solta?.slice(0,10) || '');
-  const [horaSol, setHoraSol] = React.useState(prova.dia_solta || '');
+  const [horaSol, setHoraSol] = React.useState(isTime(prova.dia_solta) ? formatHMS(prova.dia_solta) : '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -205,14 +210,15 @@ export default function Itinerario() {
                     <TableCell>{c.km}</TableCell>
                     <TableCell>
                       <span className="text-accent font-semibold">{fmtTime(c.inicioEmb)}</span>
-                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.inicioEmb)} {dayName(c.inicioEmb)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.inicioEmb)} {dayNameOf(c.inicioEmb)}</span>
                     </TableCell>
                     <TableCell>
                       <span className="text-primary font-semibold">{fmtTime(c.saida)}</span>
-                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.saida)} {dayName(c.saida)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.saida)} {dayNameOf(c.saida)}</span>
                     </TableCell>
                     <TableCell>
-                      {formatDate(prova.data_solta)} <span className="text-xs text-muted-foreground">({c.horaSolta})</span>
+                      {formatDate(prova.data_solta)} <span className="text-xs text-muted-foreground">({dayNameOf(c.solta)})</span>
+                      <span className="block text-xs text-primary font-semibold">{c.horaSolta}</span>
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
