@@ -1,4 +1,5 @@
 import { Label } from './label';
+import { Input } from './input';
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const ANOS = [];
@@ -11,12 +12,6 @@ function parseData(str) {
   const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return { dia: '', mes: '', ano: '', ok: false };
   return { ano: Number(m[1]), mes: Number(m[2]), dia: Number(m[3]), ok: true };
-}
-
-function parseHora(str) {
-  if (!str) return { hora: '', minuto: '', segundo: '' };
-  const m = String(str).trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  return m ? { hora: m[1], minuto: m[2], segundo: m[3] || '' } : { hora: '', minuto: '', segundo: '' };
 }
 
 const selectCls = "h-10 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -50,33 +45,19 @@ export function DateField({ value, onChange, label }) {
   );
 }
 
-// Campo de HORA (hora/minuto/segundo) — formato HH:MM:SS
+// Campo de HORA — texto livre no formato HH:MM:SS (ex.: "07:00:00")
 export function TimeField({ value, onChange, label }) {
-  const h = parseHora(value);
-  const set = (hora, minuto, segundo) => {
-    if (hora === '' && minuto === '' && segundo === '') return onChange('');
-    const hh = hora === '' ? '00' : pad(hora);
-    const mm = minuto === '' ? '00' : pad(minuto);
-    const ss = segundo === '' ? '00' : pad(segundo);
-    onChange(`${hh}:${mm}:${ss}`);
-  };
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
-      <div className="flex gap-2">
-        <select className={selectCls + " flex-1"} value={h.hora} onChange={e => set(e.target.value, h.minuto, h.segundo)}>
-          <option value="">Hora</option>
-          {Array.from({ length: 24 }, (_, i) => <option key={i} value={pad(i)}>{pad(i)}</option>)}
-        </select>
-        <select className={selectCls + " flex-1"} value={h.minuto} onChange={e => set(h.hora, e.target.value, h.segundo)}>
-          <option value="">Min</option>
-          {Array.from({ length: 60 }, (_, i) => <option key={i} value={pad(i)}>{pad(i)}</option>)}
-        </select>
-        <select className={selectCls + " flex-1"} value={h.segundo} onChange={e => set(h.hora, h.minuto, e.target.value)}>
-          <option value="">Seg</option>
-          {Array.from({ length: 60 }, (_, i) => <option key={i} value={pad(i)}>{pad(i)}</option>)}
-        </select>
-      </div>
+      <Input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="07:00:00"
+        inputMode="numeric"
+        maxLength={8}
+      />
+      <p className="text-[11px] text-muted-foreground">formato HH:MM:SS (ex.: 07:00:00)</p>
     </div>
   );
 }

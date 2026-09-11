@@ -58,8 +58,8 @@ function ProvaForm({ prova, onSave, onClose }) {
       km: form.km !== '' ? Number(form.km) : null,
       valor: form.valor !== '' ? Number(form.valor) : null,
       // horas ficam guardadas nos campos dia_embarque / dia_solta
-      dia_embarque: form.hora_embarque || null,
-      dia_solta: form.hora_solta || null,
+      dia_embarque: isTime(form.hora_embarque) ? formatHMS(form.hora_embarque) : null,
+      dia_solta: isTime(form.hora_solta) ? formatHMS(form.hora_solta) : null,
     };
     delete data.hora_embarque;
     delete data.hora_solta;
