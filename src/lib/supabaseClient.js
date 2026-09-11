@@ -4,24 +4,16 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
 
-// Limpar sessões de auth antigas corrompidas
-try {
-  const authKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.includes('-auth-token'));
-  authKeys.forEach(k => { localStorage.removeItem(k); });
-} catch (e) {}
-
-// Cria o client com auth desabilitado para evitar loops de re-render
-// Auth será re-habilitado quando o login for configurado corretamente
 const hasCredentials = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
-export const supabase = hasCredentials 
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { 
-      auth: { 
-        autoRefreshToken: false, 
-        persistSession: false,
-        detectSessionInUrl: false
-      } 
-    }) 
+export const supabase = hasCredentials
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    })
   : null;
 
 // Supabase ATIVO POR PADRÃO
@@ -32,6 +24,13 @@ export const isSupabaseConfigured = () => {
 };
 
 export const hasSupabaseCredentials = () => hasCredentials;
+
+// Token de acesso do usuário logado (usado nas chamadas REST com RLS)
+export async function getAccessToken() {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || null;
+}
 
 export const enableSupabase = () => {
   localStorage.setItem('colombus_supabase_enabled', 'true');

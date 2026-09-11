@@ -6,7 +6,6 @@ for (let a = 2020; a <= 2050; a++) ANOS.push(a);
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-// Converte "YYYY-MM-DD" -> {dia, mes, ano, ok}
 function parseData(str) {
   if (!str) return { dia: '', mes: '', ano: '', ok: false };
   const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -14,7 +13,6 @@ function parseData(str) {
   return { ano: Number(m[1]), mes: Number(m[2]), dia: Number(m[3]), ok: true };
 }
 
-// Converte "HH:MM" -> {hora, minuto}
 function parseHora(str) {
   if (!str) return { hora: '', minuto: '' };
   const m = String(str).match(/^(\d{1,2}):(\d{2})/);
@@ -23,27 +21,27 @@ function parseHora(str) {
 
 const selectCls = "h-10 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
-// Campo de DATA (dia/mês/ano) que funciona para qualquer ano
+// Campo de DATA (dia/mês/ano) — funciona para qualquer ano, inclusive 2027
 export function DateField({ value, onChange, label }) {
   const d = parseData(value);
   const set = (dia, mes, ano) => {
     if (!ano || !mes || !dia) return onChange('');
-    onChange(`${ano}-${pad(mes)}-${pad(dia)}`);
+    onChange(`${ano}-${pad(Number(mes))}-${pad(Number(dia))}`);
   };
-  const dias = anoNum(d.ano, d.mes);
+  const dias = diasNoMes(d.ano, d.mes);
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
       <div className="flex gap-2">
-        <select className={selectCls + " flex-1"} value={d.dia} onChange={e => set(e.target.value, d.mes, d.ano)}>
+        <select className={selectCls + " flex-1"} value={String(d.dia)} onChange={e => set(e.target.value, d.mes, d.ano)}>
           <option value="">Dia</option>
           {dias.map(dd => <option key={dd} value={dd}>{dd}</option>)}
         </select>
-        <select className={selectCls + " flex-[1.4]"} value={d.mes} onChange={e => set(d.dia, e.target.value, d.ano)}>
+        <select className={selectCls + " flex-[1.4]"} value={String(d.mes)} onChange={e => set(d.dia, e.target.value, d.ano)}>
           <option value="">Mês</option>
           {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
         </select>
-        <select className={selectCls + " flex-[1.1]"} value={d.ano} onChange={e => set(d.dia, d.mes, e.target.value)}>
+        <select className={selectCls + " flex-[1.1]"} value={String(d.ano)} onChange={e => set(d.dia, d.mes, e.target.value)}>
           <option value="">Ano</option>
           {ANOS.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
@@ -76,7 +74,7 @@ export function TimeField({ value, onChange, label }) {
   );
 }
 
-function anoNum(ano, mes) {
+function diasNoMes(ano, mes) {
   const m = Number(mes) || 1;
   const y = Number(ano) || 2026;
   const ultimo = new Date(y, m, 0).getDate();

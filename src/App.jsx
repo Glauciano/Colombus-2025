@@ -7,6 +7,7 @@ import {
 
 import Dashboard from './pages/Dashboard';
 import Provas from './pages/Provas';
+import Itinerario from './pages/Itinerario';
 import Custos from './pages/Custos';
 import CustosBase from './pages/CustosBase';
 import CCBase from './pages/CCBase';
@@ -17,9 +18,6 @@ import CidadesConfig from './pages/CidadesConfig';
 import Login from './pages/Login';
 import { db, ENTITIES } from './lib/db';
 import { supabase } from './lib/supabaseClient';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
 
 // City name to slug
 function cityToSlug(name) {
@@ -50,10 +48,24 @@ function App() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [cidades, setCidades] = React.useState(['Ribeirão Preto', 'Franca S.P', 'Limeira']);
   const [user, setUser] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
 
-  // Auth is disabled for now — login page exists at /login but is not active
-  // To re-enable: uncomment the login check below AND set up Supabase Auth
-  const handleLogin = (u) => setUser(u);
+  // Restaura a sessão do usuário logado
+  React.useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data?.session?.user || null);
+      setAuthLoading(false);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+    return () => sub?.subscription?.unsubscribe();
+  }, []);
+
   const handleLogout = async () => {
     try {
       if (supabase) await supabase.auth.signOut();
@@ -63,29 +75,22 @@ function App() {
     setUser(null);
   };
 
-  // Login is optional — app works without it
-  // To enable login, uncomment the block below:
-  // if (!user) {
-  //   return <Login onLogin={handleLogin} />;
-  // }
-
-  // Load cidades from Supabase on mount
+  // Load cidades from Supabase on mount (após login)
   React.useEffect(() => {
+    if (!user) return;
     const loadCidades = async () => {
       try {
-        const resp = await fetch(`${SUPABASE_URL}/rest/v1/configuracao?select=valor_texto&chave=eq.cidades_ativas`, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        const data = await resp.json();
-        if (data && data.length > 0 && data[0].valor_texto) {
-          setCidades(data[0].valor_texto.split(',').filter(Boolean));
+        const rows = await db.list(ENTITIES.CONFIGURACAO);
+        const row = rows.find(r => r.chave === 'cidades_ativas');
+        if (row && row.valor_texto) {
+          setCidades(row.valor_texto.split(',').filter(Boolean));
         }
       } catch (err) {
         console.error('Error loading cidades:', err);
       }
     };
     loadCidades();
-  }, []);
+  }, [user]);
 
   // Build dynamic nav sections
   const navSections = React.useMemo(() => {
@@ -107,6 +112,7 @@ function App() {
         items: [
           { path: '/', label: 'Painel', icon: LayoutDashboard },
           { path: '/provas', label: 'Provas', icon: Trophy },
+          { path: '/itinerario', label: 'Itinerário', icon: Trophy },
           { path: '/venda-anilhas', label: 'Venda de Anilhas', icon: CircleDot },
         ]
       },
@@ -120,6 +126,18 @@ function App() {
       },
     ];
   }, [cidades]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Carregando…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
 
   return (
     <BrowserRouter>
@@ -197,6 +215,18 @@ function App() {
                 <LogOut className="w-4 h-4" /><span>Sair</span>
               </button>
             )}
+            {collapsed && (
+              <button
+                onClick={handleLogout}
+                title="Sair"
+                className="flex items-center justify-center px-3 py-2 rounded-md text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+            {!collapsed && user && (
+              <p className="px-3 pt-1 text-[10px] text-sidebar-foreground/40 truncate">{user.email}</p>
+            )}
           </div>
         </aside>
 
@@ -207,17 +237,21 @@ function App() {
               <Menu className="w-5 h-5 text-muted-foreground" />
             </button>
             <span className="text-sm font-semibold">Colombus 2025</span>
+            <button onClick={handleLogout} title="Sair" className="ml-auto p-2 rounded-md hover:bg-muted">
+              <LogOut className="w-5 h-5 text-muted-foreground" />
+            </button>
           </div>
 
           <div className="p-6 lg:p-8">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/provas" element={<Provas />} />
+              <Route path="/itinerario" element={<Itinerario />} />
               <Route path="/venda-anilhas" element={<VendaAnilhas />} />
               <Route path="/custos" element={<Custos />} />
               <Route path="/cidades" element={<CidadesConfig />} />
               <Route path="/importar" element={<ImportarDados />} />
-              <Route path="/login" element={<Login onLogin={handleLogin} />} />
+              <Route path="/login" element={<Login onLogin={setUser} />} />
 
               {/* Dynamic city routes */}
               <Route path="/custos-ribeirao-preto" element={<CustosBase entity={ENTITIES.CUSTO_RIBEIRAO} title="Custos Ribeirão Preto" subtitle="Gastos logísticos - Ribeirão Preto" pdfName="custos-ribeirao-preto.pdf" />} />

@@ -1,5 +1,5 @@
 // Smart data layer: uses Supabase REST API directly for full control
-import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { supabase, isSupabaseConfigured, getAccessToken } from './supabaseClient';
 
 const STORAGE_PREFIX = 'colombus_';
 
@@ -19,19 +19,22 @@ const TABLE_MAP = {
   'configuracao': 'configuracao',
 };
 
-// --- Direct Supabase REST API calls (bypasses JS client auth issues) ---
-const supabaseHeaders = {
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation',
-};
+// --- Direct Supabase REST API calls (with the logged-in user's token) ---
+async function buildHeaders() {
+  const accessToken = await getAccessToken();
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${accessToken || SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation',
+  };
+}
 
 async function supabaseRest(method, table, body = null, query = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
   const options = {
     method,
-    headers: { ...supabaseHeaders },
+    headers: await buildHeaders(),
   };
   if (body) {
     options.body = JSON.stringify(body);
@@ -155,6 +158,8 @@ export const db = {
       return (data || []).map(item => fromSupabase(item, collection));
     } catch (err) {
       console.error(`Supabase list error (${collection}):`, err.message);
+      // Sessão expirada / sem permissão: não usar localStorage, mostrar o erro
+      if (err.status === 401 || err.status === 403) throw err;
       // For list, fall back to localStorage so the page isn't empty
       return localDb.list(collection);
     }

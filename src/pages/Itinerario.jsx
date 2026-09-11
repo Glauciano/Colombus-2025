@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Download, RefreshCw, Truck } from 'lucide-react';
+import { Pencil, Download, RefreshCw } from 'lucide-react';
 import { db, ENTITIES, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import { Button } from '../components/ui/button';
@@ -10,10 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { DateField, TimeField } from '../components/ui/datetime';
 
-// ---- Config padrão (editável, salva no Supabase) ----
+const DIAS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
 const DEFAULT_CFG = {
   velocidade: 90,
-  hora_solta: '07:00',
+  embargoLimeira: 60,
   paradas: [
     { cidade: 'Ribeirão Preto', tempo: 60 },
     { cidade: 'Franca', tempo: 60 },
@@ -21,56 +22,64 @@ const DEFAULT_CFG = {
 };
 
 function pad(n) { return String(n).padStart(2, '0'); }
-function formatTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-const DIAS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(d) { return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`; }
 function dayName(d) { return DIAS[d.getDay()]; }
-function dotBR(d) { return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; }
-function fmtDur(min) { const m=Math.round(min),h=Math.floor(m/60),x=m%60; if(h&&x)return `${h}h ${pad(x)}min`; if(h)return `${h}h`; return `${x}min`; }
+function fmtDur(min) { const m=Math.round(min),h=Math.floor(m/60),x=m%60; if(h&&x)return `${h}h${pad(x)}`; if(h)return `${h}h`; return `${x}min`; }
 
-// Calcula a data/hora de sair de Limeira para soltar na data_solta às hora_solta
-function calcSaida(prova, cfg) {
+// Calcula os horários usando a DATA e a HORA de solta definidas para a prova
+function calcLinhas(prova, cfg) {
   const km = Number(prova.km) || 0;
   const v = Number(cfg.velocidade) || 90;
-  // Hora da solta: usa a hora individual da prova (dia_solta) ou a global
-  const horaSoltaStr = prova.dia_solta || cfg.hora_solta || '07:00';
-  const [hh, mm] = horaSoltaStr.split(':').map(n => Number(n) || 0);
-  const drive = v > 0 ? (km / v) * 60 : 0;
+
+  const viagem = v > 0 ? (km / v) * 60 : 0;
   const paradas = (cfg.paradas || []).reduce((s,p) => s + (Number(p.tempo) || 0), 0);
-  const tot = drive + paradas;
+  const embLimeira = Number(cfg.embargoLimeira) || 0;
+
+  // Hora de solta definida pelo usuário (dia_solta guarda a hora, ex.: "06:30")
+  const horaSolta = prova.dia_solta || '07:00';
+  const [ hh, mm ] = horaSolta.split(':').map(n => Number(n) || 0);
 
   let solta = new Date();
-  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${horaSoltaStr}:00`);
+  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${horaSolta}:00`);
   else solta.setHours(hh, mm, 0, 0);
-  const saida = new Date(solta.getTime() - tot * 60000);
 
-  return { km, drive, paradas, tot, solta, saida, horaSoltaStr };
+  const saida = new Date(solta.getTime() - (viagem + paradas) * 60000);
+  const inicioEmb = new Date(saida.getTime() - embLimeira * 60000);
+
+  return { km, viagem, paradas, embLimeira, solta, saida, inicioEmb, total: viagem + paradas + embLimeira, horaSolta };
 }
 
-// ---- Formulário: edita data e hora de embarque/solta ----
-function DataForm({ prova, onSave, onClose }) {
-  const [emb, setEmb] = React.useState(prova.data_embarque?.slice(0,10) || '');
-  const [embHora, setEmbHora] = React.useState(prova.dia_embarque || '');
-  const [sol, setSol] = React.useState(prova.data_solta?.slice(0,10) || '');
-  const [solHora, setSolHora] = React.useState(prova.dia_solta || '');
+// ---- Formulário: data e hora de embarque e de solta (editável, salva de verdade) ----
+function ProvaForm({ prova, onSave, onClose }) {
+  const [dataEmb, setDataEmb] = React.useState(prova.data_embarque?.slice(0,10) || '');
+  const [horaEmb, setHoraEmb] = React.useState(prova.dia_embarque || '');
+  const [dataSol, setDataSol] = React.useState(prova.data_solta?.slice(0,10) || '');
+  const [horaSol, setHoraSol] = React.useState(prova.dia_solta || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({ data_embarque: emb, dia_embarque: embHora, data_solta: sol, dia_solta: solHora });
+    onSave({
+      data_embarque: dataEmb || null,
+      dia_embarque: horaEmb || null,
+      data_solta: dataSol || null,
+      dia_solta: horaSol || null,
+    });
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[460px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Itinerário — {prova.cidade}</DialogTitle>
-          <DialogDescription>Escolha a data e a hora de embarque e de solta.</DialogDescription>
+          <DialogDescription>Defina a data e a hora de embarque e de solta. Funciona em qualquer ano.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <DateField label="Data Embarque" value={emb} onChange={setEmb} />
-            <TimeField label="Hora Embarque" value={embHora} onChange={setEmbHora} />
-            <DateField label="Data Solta" value={sol} onChange={setSol} />
-            <TimeField label="Hora Solta" value={solHora} onChange={setSolHora} />
+            <DateField label="Data Embarque" value={dataEmb} onChange={setDataEmb} />
+            <TimeField label="Hora Embarque" value={horaEmb} onChange={setHoraEmb} />
+            <DateField label="Data Solta" value={dataSol} onChange={setDataSol} />
+            <TimeField label="Hora Solta" value={horaSol} onChange={setHoraSol} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
@@ -82,15 +91,13 @@ function DataForm({ prova, onSave, onClose }) {
   );
 }
 
-// ------- Página principal -------
 export default function Itinerario() {
   const { data: provas, refresh } = useCollection(ENTITIES.PROVA);
   const [cfg, setCfg] = React.useState(DEFAULT_CFG);
   const [loaded, setLoaded] = React.useState(false);
   const [editModal, setEditModal] = React.useState({ open: false, prova: null });
-  const lastCfgRef = React.useRef(null);
+  const [saving, setSaving] = React.useState(false);
 
-  // Carregar configuração
   React.useEffect(() => {
     const load = async () => {
       try {
@@ -99,51 +106,29 @@ export default function Itinerario() {
         if (row && row.valor_texto) {
           const p = JSON.parse(row.valor_texto);
           setCfg({ ...DEFAULT_CFG, ...p, paradas: Array.isArray(p.paradas) && p.paradas.length ? p.paradas : DEFAULT_CFG.paradas });
-          lastCfgRef.current = JSON.stringify({ ...DEFAULT_CFG, ...p, paradas: p.paradas });
         }
-      } catch (e) { console.error('Erro ao carregar configuração:', e); }
+      } catch (e) { console.error(e); }
       finally { setLoaded(true); }
     };
     load();
   }, []);
-
-  // Auto-save da configuração
-  React.useEffect(() => {
-    if (!loaded) return;
-    const cur = JSON.stringify(cfg);
-    if (cur === lastCfgRef.current) return;
-    const t = setTimeout(async () => {
-      try {
-        const rows = await db.list(ENTITIES.CONFIGURACAO);
-        const existing = rows.find(r => r.chave === 'itinerario_config');
-        const payload = { chave: 'itinerario_config', valor_texto: JSON.stringify(cfg), valor_numero: Number(cfg.velocidade)||0, valor: null };
-        if (existing) await db.update(ENTITIES.CONFIGURACAO, existing.id, payload);
-        else await db.create(ENTITIES.CONFIGURACAO, payload);
-        lastCfgRef.current = cur;
-      } catch (e) { console.error('Erro ao salvar configuração:', e); }
-    }, 1200);
-    return () => clearTimeout(t);
-  }, [cfg, loaded]);
 
   const sorted = [...(provas || [])].sort((a,b) => (Number(a.km)||0) - (Number(b.km)||0));
 
   const updateCfg = (patch) => setCfg(prev => ({ ...prev, ...patch }));
   const updateParada = (i, f, v) => setCfg(prev => ({ ...prev, paradas: prev.paradas.map((p,idx) => idx===i ? { ...p, [f]: v } : p) }));
 
-  // Salvar datas/horas editadas
+  // Salva as mudanças no Supabase e recarrega
   const handleFormSave = async (dados) => {
+    setSaving(true);
     try {
-      await db.update(ENTITIES.PROVA, editModal.prova.id, {
-        data_embarque: dados.data_embarque || null,
-        dia_embarque: dados.dia_embarque || null,
-        data_solta: dados.data_solta || null,
-        dia_solta: dados.dia_solta || null,
-      });
+      await db.update(ENTITIES.PROVA, editModal.prova.id, dados);
       await refresh();
     } catch (e) {
       console.error(e);
       alert('Não foi possível salvar. Verifique sua conexão.');
     } finally {
+      setSaving(false);
       setEditModal({ open: false, prova: null });
     }
   };
@@ -154,12 +139,12 @@ export default function Itinerario() {
       doc.setFontSize(18);
       doc.text('Itinerário de Solta — Colombus 2025', 14, 20);
       doc.setFontSize(11);
-      doc.text(`Velocidade ${cfg.velocidade} km/h | Solta às ${cfg.hora_solta} | Paradas: ${cfg.paradas.map(p=>p.cidade+' +'+p.tempo+'min').join(', ')}`, 14, 28);
+      doc.text(`Velocidade ${cfg.velocidade} km/h | Emb. Limeira ${cfg.embargoLimeira}min | Paradas: ${cfg.paradas.map(p=>p.cidade+' +'+p.tempo+'min').join(', ')}`, 14, 28);
       let y = 38;
       sorted.forEach(p => {
         if (y > 200) { doc.addPage(); y = 20; }
-        const c = calcSaida(p, cfg);
-        doc.text(`${p.cidade || '—'} | KM ${c.km} | Solta ${formatDate(p.data_solta)} ${cfg.hora_solta} | Sair de Limeira: ${dotBR(c.saida)} ${dayName(c.saida)} ${formatTime(c.saida)}`, 14, y);
+        const c = calcLinhas(p, cfg);
+        doc.text(`${p.cidade || '—'} | KM ${c.km} | Emb.Limeira ${fmtDate(c.inicioEmb)} ${fmtTime(c.inicioEmb)} | Sair ${fmtDate(c.saida)} ${fmtTime(c.saida)} | Solta ${formatDate(p.data_solta)} ${c.horaSolta}`, 14, y);
         y += 7;
       });
       doc.save('itinerario-solta-colombus.pdf');
@@ -171,7 +156,7 @@ export default function Itinerario() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Itinerário</h2>
-          <p className="text-muted-foreground">Horário de sair de Limeira para soltar em cada cidade</p>
+          <p className="text-muted-foreground">Embarque em Limeira → Ribeirão Preto → Franca → solta definida por você</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportPDF}><Download className="mr-2 h-4 w-4" /> PDF</Button>
@@ -188,15 +173,16 @@ export default function Itinerario() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2"><Label>Velocidade (km/h)</Label><Input type="number" min="1" value={cfg.velocidade} onChange={e=>updateCfg({ velocidade: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Hora da solta</Label><Input type="time" value={cfg.hora_solta} onChange={e=>updateCfg({ hora_solta: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Emb. Limeira (min)</Label><Input type="number" min="0" value={cfg.embargoLimeira} onChange={e=>updateCfg({ embargoLimeira: e.target.value })} /></div>
             {cfg.paradas.map((p,i) => (
-              <div key={i} className="space-y-2"><Label>Parada {cfg.paradas.length>1?i+1:''} — {p.cidade} (min)</Label><Input type="number" min="0" value={p.tempo} onChange={e=>updateParada(i,'tempo',e.target.value)} /></div>
+              <div key={i} className="space-y-2"><Label>{p.cidade} (min)</Label><Input type="number" min="0" value={p.tempo} onChange={e=>updateParada(i,'tempo',e.target.value)} /></div>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-3">O horário da solta é definido para cada prova (clique no lápis). A coluna "Sair de Limeira" usa esse horário.</p>
         </CardContent>
       </Card>
 
-      {/* Tabela (molde Provas) */}
+      {/* Tabela */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -204,26 +190,29 @@ export default function Itinerario() {
               <TableRow>
                 <TableHead>Cidade</TableHead>
                 <TableHead>KM</TableHead>
+                <TableHead>Emb. Limeira (início)</TableHead>
+                <TableHead>✅ Sair de Limeira</TableHead>
                 <TableHead>Solta</TableHead>
-                <TableHead>⏰ Sair de Limeira</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sorted.map(prova => {
-                const c = calcSaida(prova, cfg);
+                const c = calcLinhas(prova, cfg);
                 return (
                   <TableRow key={prova.id}>
                     <TableCell className="font-medium">{prova.cidade || '—'}</TableCell>
                     <TableCell>{c.km}</TableCell>
                     <TableCell>
-                      {formatDate(prova.data_solta)} {prova.dia_solta ? <span className="text-muted-foreground text-xs">({prova.dia_solta})</span> : null}
+                      <span className="text-accent font-semibold">{fmtTime(c.inicioEmb)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.inicioEmb)} {dayName(c.inicioEmb)}</span>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <span className="text-primary font-semibold">{formatTime(c.saida)}</span>
-                        <span className="text-muted-foreground"> · {dotBR(c.saida)} ({dayName(c.saida)})</span>
-                      </div>
+                      <span className="text-primary font-semibold">{fmtTime(c.saida)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.saida)} {dayName(c.saida)}</span>
+                    </TableCell>
+                    <TableCell>
+                      {formatDate(prova.data_solta)} <span className="text-xs text-muted-foreground">({c.horaSolta})</span>
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
@@ -234,7 +223,7 @@ export default function Itinerario() {
                 );
               })}
               {sorted.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -242,8 +231,9 @@ export default function Itinerario() {
       </Card>
 
       {editModal.open && (
-        <DataForm prova={editModal.prova} onSave={handleFormSave} onClose={() => setEditModal({ open: false, prova: null })} />
+        <ProvaForm prova={editModal.prova} onSave={handleFormSave} onClose={() => setEditModal({ open: false, prova: null })} />
       )}
+      {saving && <p className="text-xs text-muted-foreground">Salvando...</p>}
     </div>
   );
 }

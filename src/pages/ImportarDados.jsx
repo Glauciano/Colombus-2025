@@ -1,11 +1,9 @@
 import React from 'react';
 import { CheckCircle, AlertCircle, Database, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { hasSupabaseCredentials, isSupabaseEnabled, enableSupabase, disableSupabase } from '../lib/supabaseClient';
+import { db, ENTITIES } from '../lib/db';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
 
 export default function ImportarDados() {
   const [supabaseStatus, setSupabaseStatus] = React.useState('idle');
@@ -15,26 +13,26 @@ export default function ImportarDados() {
     if (!hasSupabaseCredentials()) { setSupabaseStatus('error'); return; }
     setSupabaseStatus('testing');
     try {
-      const headers = {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      };
-
-      // Test connection and count records
-      const tables = ['provas', 'custo_logistico', 'custo_ribeirao_preto', 'custo_franca', 'recebiveis_ribeirao_preto', 'recebiveis_franca', 'socio_limeira', 'venda_anilha', 'configuracao'];
-      const labels = ['Provas', 'Custos Logísticos', 'Custos Ribeirão', 'Custos Franca', 'Receíveis Ribeirão', 'Receíveis Franca', 'Sócios Limeira', 'Venda Anilhas', 'Configuração'];
+      const collections = [
+        { key: ENTITIES.PROVA, label: 'Provas' },
+        { key: ENTITIES.CUSTO_LOGISTICO, label: 'Custos Logísticos' },
+        { key: ENTITIES.CUSTO_RIBEIRAO, label: 'Custos Ribeirão' },
+        { key: ENTITIES.CUSTO_FRANCA, label: 'Custos Franca' },
+        { key: ENTITIES.RECEIVEIS_RIBEIRAO, label: 'Receíveis Ribeirão' },
+        { key: ENTITIES.RECEIVEIS_FRANCA, label: 'Receíveis Franca' },
+        { key: ENTITIES.SOCIO_LIMEIRA, label: 'Sócios Limeira' },
+        { key: ENTITIES.VENDA_ANILHA, label: 'Venda Anilhas' },
+        { key: ENTITIES.CONFIGURACAO, label: 'Configuração' },
+      ];
       const counts = {};
-
-      for (let i = 0; i < tables.length; i++) {
+      for (const { key, label } of collections) {
         try {
-          const resp = await fetch(`${SUPABASE_URL}/rest/v1/${tables[i]}?select=id`, { headers });
-          const data = await resp.json();
-          counts[labels[i]] = Array.isArray(data) ? data.length : 0;
+          const data = await db.list(key);
+          counts[label] = Array.isArray(data) ? data.length : 0;
         } catch {
-          counts[labels[i]] = -1;
+          counts[label] = -1;
         }
       }
-
       setRecordCounts(counts);
       setSupabaseStatus('connected');
     } catch {
