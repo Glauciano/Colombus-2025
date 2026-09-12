@@ -6,7 +6,16 @@ import { Label } from '../components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Badge } from '../components/ui/badge';
-import { db, ENTITIES } from '../lib/db';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cmoaiyhwmrsaihibfhux.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_AUHiIr1CvseO8Uy-XtqFyw_L3ELN2-4';
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation',
+};
 
 // City name to slug mapping
 function cityToSlug(name) {
@@ -36,10 +45,10 @@ export default function CidadesConfig() {
   const loadCidades = async () => {
     setLoading(true);
     try {
-      const rows = await db.list(ENTITIES.CONFIGURACAO);
-      const row = rows.find(r => r.chave === 'cidades_ativas');
-      if (row && row.valor_texto) {
-        setCidades(row.valor_texto.split(',').filter(Boolean));
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/configuracao?select=*&chave=eq.cidades_ativas`, { headers });
+      const data = await resp.json();
+      if (data && data.length > 0 && data[0].valor_texto) {
+        setCidades(data[0].valor_texto.split(',').filter(Boolean));
       } else {
         setCidades(['Ribeirão Preto', 'Franca S.P', 'Limeira']);
       }
@@ -54,13 +63,24 @@ export default function CidadesConfig() {
   // Save cidades to Supabase
   const saveCidades = async (newCidades) => {
     const text = newCidades.join(',');
-    const rows = await db.list(ENTITIES.CONFIGURACAO);
-    const existing = rows.find(r => r.chave === 'cidades_ativas');
+    // Check if record exists
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/configuracao?select=id&chave=eq.cidades_ativas`, { headers: { ...headers, 'Content-Type': undefined } });
+    const existing = await resp.json();
 
-    if (existing) {
-      await db.update(ENTITIES.CONFIGURACAO, existing.id, { valor_texto: text });
+    if (existing && existing.length > 0) {
+      // Update
+      await fetch(`${SUPABASE_URL}/rest/v1/configuracao?id=eq.${existing[0].id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ valor_texto: text }),
+      });
     } else {
-      await db.create(ENTITIES.CONFIGURACAO, { chave: 'cidades_ativas', valor_texto: text });
+      // Insert
+      await fetch(`${SUPABASE_URL}/rest/v1/configuracao`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ chave: 'cidades_ativas', valor_texto: text }),
+      });
     }
   };
 
