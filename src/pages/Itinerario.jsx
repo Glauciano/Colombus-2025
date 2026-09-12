@@ -11,26 +11,32 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { DateField, TimeField } from '../components/ui/datetime';
 import { dayName, isTime, formatHMS } from '../lib/dates';
 
-// Formulário: cria ou edita uma prova (cidade, km, data e hora de embarque e solta)
+// Formulário do itinerário: data e hora do embarque e da solta (campos próprios)
 function ProvaForm({ prova, onSave, onClose }) {
   const isEdit = !!prova;
   const [cidade, setCidade] = React.useState(prova?.cidade || '');
   const [km, setKm] = React.useState(prova?.km ?? '');
   const [dataEmb, setDataEmb] = React.useState(prova?.data_embarque?.slice(0, 10) || '');
-  const [horaEmb, setHoraEmb] = React.useState(isTime(prova?.dia_embarque) ? formatHMS(prova.dia_embarque) : '');
+  const [horaEmb, setHoraEmb] = React.useState(isTime(prova?.hora_embarque) ? formatHMS(prova.hora_embarque) : '');
   const [dataSol, setDataSol] = React.useState(prova?.data_solta?.slice(0, 10) || '');
-  const [horaSol, setHoraSol] = React.useState(isTime(prova?.dia_solta) ? formatHMS(prova.dia_solta) : '07:00:00');
+  const [horaSol, setHoraSol] = React.useState(isTime(prova?.hora_solta) ? formatHMS(prova.hora_solta) : '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
-      cidade: cidade || null,
-      km: km !== '' ? Number(km) : null,
+    const payload = {
       data_embarque: dataEmb || null,
-      dia_embarque: isTime(horaEmb) ? formatHMS(horaEmb) : null,
       data_solta: dataSol || null,
-      dia_solta: isTime(horaSol) ? formatHMS(horaSol) : null,
-    });
+    };
+    if (isTime(horaEmb)) payload.hora_embarque = formatHMS(horaEmb);
+    if (isTime(horaSol)) payload.hora_solta = formatHMS(horaSol);
+    if (!isEdit) {
+      payload.cidade = cidade || null;
+      payload.km = km !== '' ? Number(km) : null;
+      payload.categoria = 'Campeonato Adultos';
+      payload.valor = 200;
+      payload.status = 'Programada';
+    }
+    onSave(payload);
   };
 
   return (
@@ -38,13 +44,16 @@ function ProvaForm({ prova, onSave, onClose }) {
       <DialogContent className="sm:max-w-[540px]">
         <DialogHeader>
           <DialogTitle>{isEdit ? `Itinerário — ${prova.cidade}` : 'Nova Prova'}</DialogTitle>
-          <DialogDescription>Cidade, KM, data e hora do embarque e da solta.</DialogDescription>
+          <DialogDescription>Data e hora do embarque (Limeira) e da solta. Funciona para qualquer ano.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isEdit && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-2"><Label>Cidade</Label><Input value={cidade} onChange={e => setCidade(e.target.value)} placeholder="Ex: Brasília D.F" /></div>
+              <div className="space-y-2"><Label>KM</Label><Input type="number" value={km} onChange={e => setKm(e.target.value)} /></div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2"><Label>Cidade</Label><Input value={cidade} onChange={e => setCidade(e.target.value)} placeholder="Ex: Brasília D.F" /></div>
-            <div className="space-y-2"><Label>KM</Label><Input type="number" value={km} onChange={e => setKm(e.target.value)} /></div>
-            <div />
             <DateField label="Data Embarque" value={dataEmb} onChange={setDataEmb} />
             <TimeField label="Hora Embarque" value={horaEmb} onChange={setHoraEmb} />
             <DateField label="Data Solta" value={dataSol} onChange={setDataSol} />
@@ -68,14 +77,14 @@ export default function Itinerario() {
 
   const sorted = [...(provas || [])].sort((a, b) => (Number(a.km) || 0) - (Number(b.km) || 0));
 
-  const handleFormSave = async (dados) => {
+  const handleFormSave = async (payload) => {
     setSaving(true);
     setMsg('');
     try {
       if (editModal.prova) {
-        await db.update(ENTITIES.PROVA, editModal.prova.id, dados);
+        await db.update(ENTITIES.PROVA, editModal.prova.id, payload);
       } else {
-        await db.create(ENTITIES.PROVA, { ...dados, categoria: 'Campeonato Adultos', valor: 200, status: 'Programada' });
+        await db.create(ENTITIES.PROVA, payload);
       }
       await refresh();
       setMsg('Salvo ✓');
@@ -99,8 +108,8 @@ export default function Itinerario() {
       let y = 40;
       sorted.forEach(p => {
         if (y > 195) { doc.addPage(); y = 20; }
-        const emb = `${formatDate(p.data_embarque)} ${dayName(p.data_embarque) || ''} ${isTime(p.dia_embarque) ? formatHMS(p.dia_embarque) : ''}`.trim();
-        const sol = `${formatDate(p.data_solta)} ${dayName(p.data_solta) || ''} ${isTime(p.dia_solta) ? formatHMS(p.dia_solta) : ''}`.trim();
+        const emb = `${formatDate(p.data_embarque)} ${dayName(p.data_embarque) || ''} ${isTime(p.hora_embarque) ? formatHMS(p.hora_embarque) : ''}`.trim();
+        const sol = `${formatDate(p.data_solta)} ${dayName(p.data_solta) || ''} ${isTime(p.hora_solta) ? formatHMS(p.hora_solta) : ''}`.trim();
         doc.text(`${p.cidade || '—'}  |  KM ${p.km ?? '—'}  |  Embarque: ${emb}  |  Solta: ${sol}`, 14, y);
         y += 7;
       });
@@ -129,7 +138,7 @@ export default function Itinerario() {
               <TableRow>
                 <TableHead>Cidade</TableHead>
                 <TableHead>KM</TableHead>
-                <TableHead>Embarque</TableHead>
+                <TableHead>Embarque (Limeira)</TableHead>
                 <TableHead>Solta</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
@@ -142,12 +151,12 @@ export default function Itinerario() {
                   <TableCell>
                     <span className="font-medium">{formatDate(prova.data_embarque)}</span>{' '}
                     <span className="text-xs text-muted-foreground">· {dayName(prova.data_embarque) || '—'}</span>
-                    <span className="block text-xs text-primary font-semibold">{isTime(prova.dia_embarque) ? formatHMS(prova.dia_embarque) : '—'}</span>
+                    <span className="block text-xs text-primary font-semibold">{isTime(prova.hora_embarque) ? formatHMS(prova.hora_embarque) : '—'}</span>
                   </TableCell>
                   <TableCell>
                     <span className="font-medium">{formatDate(prova.data_solta)}</span>{' '}
                     <span className="text-xs text-muted-foreground">· {dayName(prova.data_solta) || '—'}</span>
-                    <span className="block text-xs text-primary font-semibold">{isTime(prova.dia_solta) ? formatHMS(prova.dia_solta) : 'definir'}</span>
+                    <span className="block text-xs text-primary font-semibold">{isTime(prova.hora_solta) ? formatHMS(prova.hora_solta) : '—'}</span>
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>

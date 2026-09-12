@@ -48,17 +48,12 @@ function App() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [cidades, setCidades] = React.useState(['Ribeirão Preto', 'Franca S.P', 'Limeira']);
   const [user, setUser] = React.useState(null);
-  const [authLoading, setAuthLoading] = React.useState(true);
 
-  // Restaura a sessão do usuário logado
+  // Se alguém entrar pelo /login, mantém a sessão (opcional)
   React.useEffect(() => {
-    if (!supabase) {
-      setAuthLoading(false);
-      return;
-    }
+    if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
       setUser(data?.session?.user || null);
-      setAuthLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
@@ -75,9 +70,8 @@ function App() {
     setUser(null);
   };
 
-  // Load cidades from Supabase on mount (após login)
+  // Load cidades from Supabase on mount
   React.useEffect(() => {
-    if (!user) return;
     const loadCidades = async () => {
       try {
         const rows = await db.list(ENTITIES.CONFIGURACAO);
@@ -90,7 +84,7 @@ function App() {
       }
     };
     loadCidades();
-  }, [user]);
+  }, []);
 
   // Build dynamic nav sections
   const navSections = React.useMemo(() => {
@@ -126,18 +120,6 @@ function App() {
       },
     ];
   }, [cidades]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Carregando…</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Login onLogin={setUser} />;
-  }
 
   return (
     <BrowserRouter>

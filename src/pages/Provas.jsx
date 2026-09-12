@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Pencil, Trash2, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import { Button } from '../components/ui/button';
@@ -9,8 +9,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
-import { DateField, TimeField } from '../components/ui/datetime';
-import { dayName, isTime, formatHMS, formatTimeOrDash } from '../lib/dates';
 
 const CATEGORIAS = ['Copa Filhotes', 'Campeonato Adultos'];
 const STATUS_OPTIONS = ['Programada', 'Em Andamento', 'Concluída', 'Cancelada'];
@@ -24,8 +22,8 @@ const statusVariant = {
 
 const emptyProva = {
   cidade: '', km: '', categoria: 'Copa Filhotes',
-  data_embarque: '', hora_embarque: '',
-  data_solta: '', hora_solta: '',
+  data_embarque: '', dia_embarque: '',
+  data_solta: '', dia_solta: '',
   valor: '', status: 'Programada'
 };
 
@@ -40,9 +38,9 @@ function ProvaForm({ prova, onSave, onClose }) {
         cidade: prova.cidade || '', km: prova.km || '',
         categoria: prova.categoria || 'Copa Filhotes',
         data_embarque: prova.data_embarque?.slice(0, 10) || '',
-        hora_embarque: isTime(prova.dia_embarque) ? formatHMS(prova.dia_embarque) : '',
+        dia_embarque: prova.dia_embarque || '',
         data_solta: prova.data_solta?.slice(0, 10) || '',
-        hora_solta: isTime(prova.dia_solta) ? formatHMS(prova.dia_solta) : '',
+        dia_solta: prova.dia_solta || '',
         valor: prova.valor || '', status: prova.status || 'Programada',
       });
     }
@@ -53,16 +51,7 @@ function ProvaForm({ prova, onSave, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const data = {
-      ...form,
-      km: form.km !== '' ? Number(form.km) : null,
-      valor: form.valor !== '' ? Number(form.valor) : null,
-      // horas ficam guardadas nos campos dia_embarque / dia_solta
-      dia_embarque: isTime(form.hora_embarque) ? formatHMS(form.hora_embarque) : null,
-      dia_solta: isTime(form.hora_solta) ? formatHMS(form.hora_solta) : null,
-    };
-    delete data.hora_embarque;
-    delete data.hora_solta;
+    const data = { ...form, km: form.km !== '' ? Number(form.km) : undefined, valor: form.valor !== '' ? Number(form.valor) : undefined };
     if (isEdit) { await db.update(ENTITIES.PROVA, prova.id, data); } else { await db.create(ENTITIES.PROVA, data); }
     setSaving(false);
     onSave();
@@ -70,10 +59,10 @@ function ProvaForm({ prova, onSave, onClose }) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar Prova' : 'Nova Prova'}</DialogTitle>
-          <DialogDescription>Preencha os dados da prova abaixo. O dia da semana é calculado sozinho.</DialogDescription>
+          <DialogDescription>Preencha os dados da prova abaixo.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -84,19 +73,10 @@ function ProvaForm({ prova, onSave, onClose }) {
                 {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-
-            <div className="space-y-2">
-              <DateField label="Data Embarque" value={form.data_embarque} onChange={v => handleChange('data_embarque', v)} />
-              <p className="text-xs text-muted-foreground">Dia da semana: <span className="font-medium text-foreground">{dayName(form.data_embarque) || '—'}</span></p>
-            </div>
-            <TimeField label="Hora Embarque (HH:MM:SS)" value={form.hora_embarque} onChange={v => handleChange('hora_embarque', v)} />
-
-            <div className="space-y-2">
-              <DateField label="Data Solta" value={form.data_solta} onChange={v => handleChange('data_solta', v)} />
-              <p className="text-xs text-muted-foreground">Dia da semana: <span className="font-medium text-foreground">{dayName(form.data_solta) || '—'}</span></p>
-            </div>
-            <TimeField label="Hora Solta (HH:MM:SS)" value={form.hora_solta} onChange={v => handleChange('hora_solta', v)} />
-
+            <div className="space-y-2"><Label>Data Embarque</Label><Input type="date" value={form.data_embarque} onChange={e => handleChange('data_embarque', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Dia Embarque</Label><Input value={form.dia_embarque} onChange={e => handleChange('dia_embarque', e.target.value)} placeholder="Sexta" /></div>
+            <div className="space-y-2"><Label>Data Solta</Label><Input type="date" value={form.data_solta} onChange={e => handleChange('data_solta', e.target.value)} /></div>
+            <div className="space-y-2"><Label>Dia Solta</Label><Input value={form.dia_solta} onChange={e => handleChange('dia_solta', e.target.value)} placeholder="Sábado" /></div>
             <div className="space-y-2"><Label>Valor (R$)</Label><Input type="number" step="0.01" value={form.valor} onChange={e => handleChange('valor', e.target.value)} /></div>
             <div className="space-y-2"><Label>Status</Label>
               <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" value={form.status} onChange={e => handleChange('status', e.target.value)}>
@@ -124,35 +104,6 @@ export default function Provas() {
 
   const handleDelete = async () => { await removeProva(deleteModal.prova.id); setDeleteModal({ open: false, prova: null }); };
 
-  const exportPDF = () => {
-    Promise.all([import('jspdf'), import('jspdf-autotable')]).then(([{ default: jsPDF }, m]) => {
-      const autoTable = m.autoTable || m.default;
-      const doc = new jsPDF({ orientation: 'landscape' });
-      doc.setFontSize(16);
-      doc.text('Calendário de Provas — Colombus 2025', 14, 16);
-      autoTable(doc, {
-        startY: 22,
-        head: [['Cidade', 'KM', 'Categoria', 'Data Emb.', 'Dia Emb.', 'Hora Emb.', 'Data Solta', 'Dia Solta', 'Hora Solta', 'Valor', 'Status']],
-        body: filtered.map(p => [
-          p.cidade || '—',
-          p.km ?? '—',
-          p.categoria || '—',
-          formatDate(p.data_embarque),
-          dayName(p.data_embarque) || '—',
-          isTime(p.dia_embarque) ? formatHMS(p.dia_embarque) : '—',
-          formatDate(p.data_solta),
-          dayName(p.data_solta) || '—',
-          isTime(p.dia_solta) ? formatHMS(p.dia_solta) : '—',
-          p.valor ? 'R$ ' + formatCurrency(p.valor) : '—',
-          p.status || '—',
-        ]),
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [31, 71, 61] },
-      });
-      doc.save('calendario-provas-colombus.pdf');
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -160,14 +111,9 @@ export default function Provas() {
           <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Provas</h2>
           <p className="text-muted-foreground">Calendário de competições de pombos-correio</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPDF}>
-            <Download className="mr-2 h-4 w-4" /> PDF
-          </Button>
-          <Button onClick={() => setEditModal({ open: true, prova: null })}>
-            <Plus className="mr-2 h-4 w-4" /> Nova Prova
-          </Button>
-        </div>
+        <Button onClick={() => setEditModal({ open: true, prova: null })}>
+          <Plus className="mr-2 h-4 w-4" /> Nova Prova
+        </Button>
       </div>
 
       {/* Filter tabs */}
@@ -188,11 +134,7 @@ export default function Provas() {
                 <TableHead>KM</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Data Embarque</TableHead>
-                <TableHead>Dia Embarque</TableHead>
-                <TableHead>Hora Embarque</TableHead>
                 <TableHead>Data Solta</TableHead>
-                <TableHead>Dia Solta</TableHead>
-                <TableHead>Hora Solta</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
@@ -205,11 +147,7 @@ export default function Provas() {
                   <TableCell>{prova.km || '—'}</TableCell>
                   <TableCell><Badge variant="secondary">{prova.categoria}</Badge></TableCell>
                   <TableCell>{formatDate(prova.data_embarque)}</TableCell>
-                  <TableCell><span className="font-medium">{dayName(prova.data_embarque) || '—'}</span></TableCell>
-                  <TableCell><span className="text-primary font-semibold">{formatTimeOrDash(prova.dia_embarque)}</span></TableCell>
                   <TableCell>{formatDate(prova.data_solta)}</TableCell>
-                  <TableCell><span className="font-medium">{dayName(prova.data_solta) || '—'}</span></TableCell>
-                  <TableCell><span className="text-primary font-semibold">{formatTimeOrDash(prova.dia_solta)}</span></TableCell>
                   <TableCell>{prova.valor ? `R$ ${formatCurrency(prova.valor)}` : '—'}</TableCell>
                   <TableCell><Badge variant={statusVariant[prova.status] || 'default'}>{prova.status || 'Programada'}</Badge></TableCell>
                   <TableCell>
@@ -221,7 +159,7 @@ export default function Provas() {
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={12} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
