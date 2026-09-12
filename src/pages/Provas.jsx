@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import { Button } from '../components/ui/button';
@@ -124,6 +124,35 @@ export default function Provas() {
 
   const handleDelete = async () => { await removeProva(deleteModal.prova.id); setDeleteModal({ open: false, prova: null }); };
 
+  const exportPDF = () => {
+    Promise.all([import('jspdf'), import('jspdf-autotable')]).then(([{ default: jsPDF }, m]) => {
+      const autoTable = m.autoTable || m.default;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(16);
+      doc.text('Calendário de Provas — Colombus 2025', 14, 16);
+      autoTable(doc, {
+        startY: 22,
+        head: [['Cidade', 'KM', 'Categoria', 'Data Emb.', 'Dia Emb.', 'Hora Emb.', 'Data Solta', 'Dia Solta', 'Hora Solta', 'Valor', 'Status']],
+        body: filtered.map(p => [
+          p.cidade || '—',
+          p.km ?? '—',
+          p.categoria || '—',
+          formatDate(p.data_embarque),
+          dayName(p.data_embarque) || '—',
+          isTime(p.dia_embarque) ? formatHMS(p.dia_embarque) : '—',
+          formatDate(p.data_solta),
+          dayName(p.data_solta) || '—',
+          isTime(p.dia_solta) ? formatHMS(p.dia_solta) : '—',
+          p.valor ? 'R$ ' + formatCurrency(p.valor) : '—',
+          p.status || '—',
+        ]),
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [31, 71, 61] },
+      });
+      doc.save('calendario-provas-colombus.pdf');
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -131,9 +160,14 @@ export default function Provas() {
           <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Provas</h2>
           <p className="text-muted-foreground">Calendário de competições de pombos-correio</p>
         </div>
-        <Button onClick={() => setEditModal({ open: true, prova: null })}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Prova
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportPDF}>
+            <Download className="mr-2 h-4 w-4" /> PDF
+          </Button>
+          <Button onClick={() => setEditModal({ open: true, prova: null })}>
+            <Plus className="mr-2 h-4 w-4" /> Nova Prova
+          </Button>
+        </div>
       </div>
 
       {/* Filter tabs */}

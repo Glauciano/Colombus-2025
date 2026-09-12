@@ -1,72 +1,78 @@
+import React from 'react';
 import { Label } from './label';
 import { Input } from './input';
 
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const ANOS = [];
-for (let a = 2020; a <= 2050; a++) ANOS.push(a);
+const onlyDigits = (v) => String(v || '').replace(/\D/g, '');
 
-function pad(n) { return String(n).padStart(2, '0'); }
-
-function parseData(str) {
-  if (!str) return { dia: '', mes: '', ano: '', ok: false };
-  const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return { dia: '', mes: '', ano: '', ok: false };
-  return { ano: Number(m[1]), mes: Number(m[2]), dia: Number(m[3]), ok: true };
+// "2027-06-05" -> "05/06/2027" (para exibir com separadores)
+function toDisplayDate(value) {
+  const m = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : (value || '');
 }
 
-const selectCls = "h-10 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+// "05062027" -> "05/06/2027" (coloca os separadores sozinho)
+function maskDate(digits) {
+  const d = digits.slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
 
-// Campo de DATA (dia/mês/ano) — funciona para qualquer ano, inclusive 2027
+// "073000" -> "07:30:00" (coloca os ":" sozinho)
+function maskTime(digits) {
+  const d = digits.slice(0, 6);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}:${d.slice(2)}`;
+  return `${d.slice(0, 2)}:${d.slice(2, 4)}:${d.slice(4)}`;
+}
+
+// Campo de DATA — texto DD/MM/AAAA com separadores automáticos
 export function DateField({ value, onChange, label }) {
-  const d = parseData(value);
-  const set = (dia, mes, ano) => {
-    if (!ano || !mes || !dia) return onChange('');
-    onChange(`${ano}-${pad(Number(mes))}-${pad(Number(dia))}`);
+  const [text, setText] = React.useState(toDisplayDate(value));
+  const editing = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!editing.current) setText(toDisplayDate(value));
+  }, [value]);
+
+  const handle = (e) => {
+    editing.current = true;
+    const masked = maskDate(onlyDigits(e.target.value));
+    setText(masked);
+    const digits = onlyDigits(masked);
+    onChange(digits.length === 8 ? `${digits.slice(4, 8)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}` : '');
   };
-  const dias = diasNoMes(d.ano, d.mes);
+
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
-      <div className="flex gap-2">
-        <select className={selectCls + " flex-1"} value={String(d.dia)} onChange={e => set(e.target.value, d.mes, d.ano)}>
-          <option value="">Dia</option>
-          {dias.map(dd => <option key={dd} value={dd}>{dd}</option>)}
-        </select>
-        <select className={selectCls + " flex-[1.4]"} value={String(d.mes)} onChange={e => set(d.dia, e.target.value, d.ano)}>
-          <option value="">Mês</option>
-          {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-        </select>
-        <select className={selectCls + " flex-[1.1]"} value={String(d.ano)} onChange={e => set(d.dia, d.mes, e.target.value)}>
-          <option value="">Ano</option>
-          {ANOS.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-      </div>
+      <Input value={text} onChange={handle} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} />
+      <p className="text-[11px] text-muted-foreground">formato DD/MM/AAAA (ex.: 05/06/2027)</p>
     </div>
   );
 }
 
-// Campo de HORA — texto livre no formato HH:MM:SS (ex.: "07:00:00")
+// Campo de HORA — texto HH:MM:SS com ":" automáticos
 export function TimeField({ value, onChange, label }) {
+  const [text, setText] = React.useState(String(value || ''));
+  const editing = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!editing.current) setText(String(value || ''));
+  }, [value]);
+
+  const handle = (e) => {
+    editing.current = true;
+    const masked = maskTime(onlyDigits(e.target.value));
+    setText(masked);
+    onChange(masked);
+  };
+
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
-      <Input
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="07:00:00"
-        inputMode="numeric"
-        maxLength={8}
-      />
-      <p className="text-[11px] text-muted-foreground">formato HH:MM:SS (ex.: 07:00:00)</p>
+      <Input value={text} onChange={handle} placeholder="HH:MM:SS" inputMode="numeric" maxLength={8} />
+      <p className="text-[11px] text-muted-foreground">formato HH:MM:SS (ex.: 07:30:00)</p>
     </div>
   );
-}
-
-function diasNoMes(ano, mes) {
-  const m = Number(mes) || 1;
-  const y = Number(ano) || 2026;
-  const ultimo = new Date(y, m, 0).getDate();
-  const out = [];
-  for (let i = 1; i <= ultimo; i++) out.push(i);
-  return out;
 }
