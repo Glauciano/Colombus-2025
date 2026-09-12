@@ -1,58 +1,80 @@
 import React from 'react';
-import { Pencil, Download, Plus } from 'lucide-react';
+import { Pencil, Download, RefreshCw } from 'lucide-react';
 import { db, ENTITIES, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { DateField, TimeField } from '../components/ui/datetime';
-import { dayName, isTime, formatHMS } from '../lib/dates';
 
-// Formulário do itinerário: data e hora do embarque e da solta (campos próprios)
+const DIAS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+const DEFAULT_CFG = {
+  velocidade: 90,
+  embargoLimeira: 60,
+  paradas: [
+    { cidade: 'Ribeirão Preto', tempo: 60 },
+    { cidade: 'Franca', tempo: 60 },
+  ],
+};
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtTime(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(d) { return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`; }
+function dayName(d) { return DIAS[d.getDay()]; }
+function fmtDur(min) { const m=Math.round(min),h=Math.floor(m/60),x=m%60; if(h&&x)return `${h}h${pad(x)}`; if(h)return `${h}h`; return `${x}min`; }
+
+// Calcula os horários usando a DATA e a HORA de solta definidas para a prova
+function calcLinhas(prova, cfg) {
+  const km = Number(prova.km) || 0;
+  const v = Number(cfg.velocidade) || 90;
+
+  const viagem = v > 0 ? (km / v) * 60 : 0;
+  const paradas = (cfg.paradas || []).reduce((s,p) => s + (Number(p.tempo) || 0), 0);
+  const embLimeira = Number(cfg.embargoLimeira) || 0;
+
+  // Hora de solta definida pelo usuário (dia_solta guarda a hora, ex.: "06:30")
+  const horaSolta = prova.dia_solta || '07:00';
+  const [ hh, mm ] = horaSolta.split(':').map(n => Number(n) || 0);
+
+  let solta = new Date();
+  if (prova.data_solta) solta = new Date(`${prova.data_solta}T${horaSolta}:00`);
+  else solta.setHours(hh, mm, 0, 0);
+
+  const saida = new Date(solta.getTime() - (viagem + paradas) * 60000);
+  const inicioEmb = new Date(saida.getTime() - embLimeira * 60000);
+
+  return { km, viagem, paradas, embLimeira, solta, saida, inicioEmb, total: viagem + paradas + embLimeira, horaSolta };
+}
+
+// ---- Formulário: data e hora de embarque e de solta (editável, salva de verdade) ----
 function ProvaForm({ prova, onSave, onClose }) {
-  const isEdit = !!prova;
-  const [cidade, setCidade] = React.useState(prova?.cidade || '');
-  const [km, setKm] = React.useState(prova?.km ?? '');
-  const [dataEmb, setDataEmb] = React.useState(prova?.data_embarque?.slice(0, 10) || '');
-  const [horaEmb, setHoraEmb] = React.useState(isTime(prova?.hora_embarque) ? formatHMS(prova.hora_embarque) : '');
-  const [dataSol, setDataSol] = React.useState(prova?.data_solta?.slice(0, 10) || '');
-  const [horaSol, setHoraSol] = React.useState(isTime(prova?.hora_solta) ? formatHMS(prova.hora_solta) : '');
+  const [dataEmb, setDataEmb] = React.useState(prova.data_embarque?.slice(0,10) || '');
+  const [horaEmb, setHoraEmb] = React.useState(prova.dia_embarque || '');
+  const [dataSol, setDataSol] = React.useState(prova.data_solta?.slice(0,10) || '');
+  const [horaSol, setHoraSol] = React.useState(prova.dia_solta || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const payload = {
+    onSave({
       data_embarque: dataEmb || null,
+      dia_embarque: horaEmb || null,
       data_solta: dataSol || null,
-    };
-    if (isTime(horaEmb)) payload.hora_embarque = formatHMS(horaEmb);
-    if (isTime(horaSol)) payload.hora_solta = formatHMS(horaSol);
-    if (!isEdit) {
-      payload.cidade = cidade || null;
-      payload.km = km !== '' ? Number(km) : null;
-      payload.categoria = 'Campeonato Adultos';
-      payload.valor = 200;
-      payload.status = 'Programada';
-    }
-    onSave(payload);
+      dia_solta: horaSol || null,
+    });
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[540px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{isEdit ? `Itinerário — ${prova.cidade}` : 'Nova Prova'}</DialogTitle>
-          <DialogDescription>Data e hora do embarque (Limeira) e da solta. Funciona para qualquer ano.</DialogDescription>
+          <DialogTitle>Itinerário — {prova.cidade}</DialogTitle>
+          <DialogDescription>Defina a data e a hora de embarque e de solta. Funciona em qualquer ano.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isEdit && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2"><Label>Cidade</Label><Input value={cidade} onChange={e => setCidade(e.target.value)} placeholder="Ex: Brasília D.F" /></div>
-              <div className="space-y-2"><Label>KM</Label><Input type="number" value={km} onChange={e => setKm(e.target.value)} /></div>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <DateField label="Data Embarque" value={dataEmb} onChange={setDataEmb} />
             <TimeField label="Hora Embarque" value={horaEmb} onChange={setHoraEmb} />
@@ -71,30 +93,43 @@ function ProvaForm({ prova, onSave, onClose }) {
 
 export default function Itinerario() {
   const { data: provas, refresh } = useCollection(ENTITIES.PROVA);
+  const [cfg, setCfg] = React.useState(DEFAULT_CFG);
+  const [loaded, setLoaded] = React.useState(false);
   const [editModal, setEditModal] = React.useState({ open: false, prova: null });
   const [saving, setSaving] = React.useState(false);
-  const [msg, setMsg] = React.useState('');
 
-  const sorted = [...(provas || [])].sort((a, b) => (Number(a.km) || 0) - (Number(b.km) || 0));
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const rows = await db.list(ENTITIES.CONFIGURACAO);
+        const row = rows.find(r => r.chave === 'itinerario_config');
+        if (row && row.valor_texto) {
+          const p = JSON.parse(row.valor_texto);
+          setCfg({ ...DEFAULT_CFG, ...p, paradas: Array.isArray(p.paradas) && p.paradas.length ? p.paradas : DEFAULT_CFG.paradas });
+        }
+      } catch (e) { console.error(e); }
+      finally { setLoaded(true); }
+    };
+    load();
+  }, []);
 
-  const handleFormSave = async (payload) => {
+  const sorted = [...(provas || [])].sort((a,b) => (Number(a.km)||0) - (Number(b.km)||0));
+
+  const updateCfg = (patch) => setCfg(prev => ({ ...prev, ...patch }));
+  const updateParada = (i, f, v) => setCfg(prev => ({ ...prev, paradas: prev.paradas.map((p,idx) => idx===i ? { ...p, [f]: v } : p) }));
+
+  // Salva as mudanças no Supabase e recarrega
+  const handleFormSave = async (dados) => {
     setSaving(true);
-    setMsg('');
     try {
-      if (editModal.prova) {
-        await db.update(ENTITIES.PROVA, editModal.prova.id, payload);
-      } else {
-        await db.create(ENTITIES.PROVA, payload);
-      }
+      await db.update(ENTITIES.PROVA, editModal.prova.id, dados);
       await refresh();
-      setMsg('Salvo ✓');
     } catch (e) {
       console.error(e);
-      setMsg('Não salvou: ' + (e?.message || 'erro'));
+      alert('Não foi possível salvar. Verifique sua conexão.');
     } finally {
       setSaving(false);
       setEditModal({ open: false, prova: null });
-      setTimeout(() => setMsg(''), 4000);
     }
   };
 
@@ -102,18 +137,17 @@ export default function Itinerario() {
     import('jspdf').then(({ default: jsPDF }) => {
       const doc = new jsPDF({ orientation: 'landscape' });
       doc.setFontSize(18);
-      doc.text('Itinerário — Colombus 2025', 14, 20);
-      doc.setFontSize(10);
-      doc.text('Rota: Limeira (embarque ~1h) → Ribeirão Preto (+~1h) → Franca (+~1h) → cidade da solta', 14, 28);
-      let y = 40;
+      doc.text('Itinerário de Solta — Colombus 2025', 14, 20);
+      doc.setFontSize(11);
+      doc.text(`Velocidade ${cfg.velocidade} km/h | Emb. Limeira ${cfg.embargoLimeira}min | Paradas: ${cfg.paradas.map(p=>p.cidade+' +'+p.tempo+'min').join(', ')}`, 14, 28);
+      let y = 38;
       sorted.forEach(p => {
-        if (y > 195) { doc.addPage(); y = 20; }
-        const emb = `${formatDate(p.data_embarque)} ${dayName(p.data_embarque) || ''} ${isTime(p.hora_embarque) ? formatHMS(p.hora_embarque) : ''}`.trim();
-        const sol = `${formatDate(p.data_solta)} ${dayName(p.data_solta) || ''} ${isTime(p.hora_solta) ? formatHMS(p.hora_solta) : ''}`.trim();
-        doc.text(`${p.cidade || '—'}  |  KM ${p.km ?? '—'}  |  Embarque: ${emb}  |  Solta: ${sol}`, 14, y);
+        if (y > 200) { doc.addPage(); y = 20; }
+        const c = calcLinhas(p, cfg);
+        doc.text(`${p.cidade || '—'} | KM ${c.km} | Emb.Limeira ${fmtDate(c.inicioEmb)} ${fmtTime(c.inicioEmb)} | Sair ${fmtDate(c.saida)} ${fmtTime(c.saida)} | Solta ${formatDate(p.data_solta)} ${c.horaSolta}`, 14, y);
         y += 7;
       });
-      doc.save('itinerario-colombus.pdf');
+      doc.save('itinerario-solta-colombus.pdf');
     });
   };
 
@@ -122,15 +156,33 @@ export default function Itinerario() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Itinerário</h2>
-          <p className="text-muted-foreground">Rota: Limeira (embarque ~1h) → Ribeirão Preto (+~1h) → Franca (+~1h) → cidade da solta</p>
+          <p className="text-muted-foreground">Embarque em Limeira → Ribeirão Preto → Franca → solta definida por você</p>
         </div>
-        <div className="flex gap-2 items-center">
-          {msg && <span className="text-sm font-medium text-primary">{msg}</span>}
+        <div className="flex gap-2">
           <Button variant="outline" onClick={exportPDF}><Download className="mr-2 h-4 w-4" /> PDF</Button>
-          <Button onClick={() => setEditModal({ open: true, prova: null })}><Plus className="mr-2 h-4 w-4" /> Nova Prova</Button>
+          <Button variant="outline" onClick={() => refresh()}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
         </div>
       </div>
 
+      {/* Configuração */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Viagem</CardTitle>
+          <span className="text-xs text-muted-foreground">{cfg.paradas.map(p=>p.cidade).join(' → ')}</span>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-2"><Label>Velocidade (km/h)</Label><Input type="number" min="1" value={cfg.velocidade} onChange={e=>updateCfg({ velocidade: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Emb. Limeira (min)</Label><Input type="number" min="0" value={cfg.embargoLimeira} onChange={e=>updateCfg({ embargoLimeira: e.target.value })} /></div>
+            {cfg.paradas.map((p,i) => (
+              <div key={i} className="space-y-2"><Label>{p.cidade} (min)</Label><Input type="number" min="0" value={p.tempo} onChange={e=>updateParada(i,'tempo',e.target.value)} /></div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">O horário da solta é definido para cada prova (clique no lápis). A coluna "Sair de Limeira" usa esse horário.</p>
+        </CardContent>
+      </Card>
+
+      {/* Tabela */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -138,35 +190,40 @@ export default function Itinerario() {
               <TableRow>
                 <TableHead>Cidade</TableHead>
                 <TableHead>KM</TableHead>
-                <TableHead>Embarque (Limeira)</TableHead>
+                <TableHead>Emb. Limeira (início)</TableHead>
+                <TableHead>✅ Sair de Limeira</TableHead>
                 <TableHead>Solta</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map(prova => (
-                <TableRow key={prova.id}>
-                  <TableCell className="font-medium">{prova.cidade || '—'}</TableCell>
-                  <TableCell>{prova.km ?? '—'}</TableCell>
-                  <TableCell>
-                    <span className="font-medium">{formatDate(prova.data_embarque)}</span>{' '}
-                    <span className="text-xs text-muted-foreground">· {dayName(prova.data_embarque) || '—'}</span>
-                    <span className="block text-xs text-primary font-semibold">{isTime(prova.hora_embarque) ? formatHMS(prova.hora_embarque) : '—'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium">{formatDate(prova.data_solta)}</span>{' '}
-                    <span className="text-xs text-muted-foreground">· {dayName(prova.data_solta) || '—'}</span>
-                    <span className="block text-xs text-primary font-semibold">{isTime(prova.hora_solta) ? formatHMS(prova.hora_solta) : '—'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {sorted.map(prova => {
+                const c = calcLinhas(prova, cfg);
+                return (
+                  <TableRow key={prova.id}>
+                    <TableCell className="font-medium">{prova.cidade || '—'}</TableCell>
+                    <TableCell>{c.km}</TableCell>
+                    <TableCell>
+                      <span className="text-accent font-semibold">{fmtTime(c.inicioEmb)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.inicioEmb)} {dayName(c.inicioEmb)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-primary font-semibold">{fmtTime(c.saida)}</span>
+                      <span className="text-muted-foreground text-xs"> · {fmtDate(c.saida)} {dayName(c.saida)}</span>
+                    </TableCell>
+                    <TableCell>
+                      {formatDate(prova.data_solta)} <span className="text-xs text-muted-foreground">({c.horaSolta})</span>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditModal({ open: true, prova })}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {sorted.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Nenhuma prova cadastrada.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

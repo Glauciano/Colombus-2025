@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { db, ENTITIES, formatCurrency, formatDate } from '../lib/db';
 import { useCollection } from '../lib/useCollection';
 import { Button } from '../components/ui/button';
@@ -24,7 +24,7 @@ const emptyProva = {
   cidade: '', km: '', categoria: 'Copa Filhotes',
   data_embarque: '', dia_embarque: '',
   data_solta: '', dia_solta: '',
-  valor: '', status: 'Programada'
+  valor: '', status: 'Programada', observacoes: ''
 };
 
 function ProvaForm({ prova, onSave, onClose }) {
@@ -42,6 +42,7 @@ function ProvaForm({ prova, onSave, onClose }) {
         data_solta: prova.data_solta?.slice(0, 10) || '',
         dia_solta: prova.dia_solta || '',
         valor: prova.valor || '', status: prova.status || 'Programada',
+        observacoes: prova.observacoes || '',
       });
     }
   }, [prova]);
@@ -83,6 +84,15 @@ function ProvaForm({ prova, onSave, onClose }) {
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+            <div className="col-span-2 space-y-2">
+              <Label>Observações</Label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={form.observacoes}
+                onChange={e => handleChange('observacoes', e.target.value)}
+                placeholder="Ex.: horário de embarque, detalhes da rota, informações da solta…"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
@@ -104,6 +114,31 @@ export default function Provas() {
 
   const handleDelete = async () => { await removeProva(deleteModal.prova.id); setDeleteModal({ open: false, prova: null }); };
 
+  const exportPDF = () => {
+    Promise.all([import('jspdf'), import('jspdf-autotable')]).then(([{ default: jsPDF }, m]) => {
+      const autoTable = m.autoTable || m.default;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(16);
+      doc.text('Calendário de Provas — Colombus 2025', 14, 16);
+      autoTable(doc, {
+        startY: 22,
+        head: [['Cidade', 'KM', 'Categoria', 'Data Embarque', 'Data Solta', 'Valor', 'Status']],
+        body: filtered.map(p => [
+          p.cidade || '—',
+          p.km ?? '—',
+          p.categoria || '—',
+          formatDate(p.data_embarque),
+          formatDate(p.data_solta),
+          p.valor ? 'R$ ' + formatCurrency(p.valor) : '—',
+          p.status || '—',
+        ]),
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [31, 71, 61] },
+      });
+      doc.save('calendario-provas-colombus.pdf');
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -111,9 +146,14 @@ export default function Provas() {
           <h2 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: '"Playfair Display", serif' }}>Provas</h2>
           <p className="text-muted-foreground">Calendário de competições de pombos-correio</p>
         </div>
-        <Button onClick={() => setEditModal({ open: true, prova: null })}>
-          <Plus className="mr-2 h-4 w-4" /> Nova Prova
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportPDF}>
+            <Download className="mr-2 h-4 w-4" /> PDF
+          </Button>
+          <Button onClick={() => setEditModal({ open: true, prova: null })}>
+            <Plus className="mr-2 h-4 w-4" /> Nova Prova
+          </Button>
+        </div>
       </div>
 
       {/* Filter tabs */}

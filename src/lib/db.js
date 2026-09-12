@@ -19,6 +19,11 @@ const TABLE_MAP = {
   'configuracao': 'configuracao',
 };
 
+// Colunas conhecidas por tabela (para descartar campos que ainda não existem no banco)
+const KNOWN_COLUMNS = {
+  'provas': ['cidade', 'km', 'categoria', 'data_embarque', 'dia_embarque', 'data_solta', 'dia_solta', 'valor', 'status', 'hora_embarque', 'hora_solta', 'observacoes'],
+};
+
 // --- Direct Supabase REST API calls (bypasses JS client auth issues) ---
 const supabaseHeaders = {
   'apikey': SUPABASE_ANON_KEY,
@@ -55,6 +60,22 @@ async function supabaseRest(method, table, body = null, query = '') {
   const text = await response.text();
   if (!text) return null;
   return JSON.parse(text);
+}
+
+// Escreve no Supabase. Se uma coluna ainda não existir no banco
+// (ex.: observacoes antes de rodar o script), remove e tenta de novo.
+async function supabaseWrite(method, table, body, query) {
+  try {
+    return await supabaseRest(method, table, body, query);
+  } catch (err) {
+    const m = (err.message || '').match(/Could not find the '(\w+)' column/);
+    if (m && body) {
+      console.warn(`[db] Coluna "${m[1]}" não existe ainda no banco — salvando sem ela.`);
+      delete body[m[1]];
+      return await supabaseRest(method, table, body, query);
+    }
+    throw err;
+  }
 }
 
 // --- localStorage CRUD ---
@@ -127,6 +148,13 @@ function toSupabase(item, collection) {
   delete result.created_at;
   delete result.user_id;
   delete result.id;
+  // Remove campos que ainda não existem na tabela (evita erro de salvamento)
+  const allowed = KNOWN_COLUMNS[collection];
+  if (allowed) {
+    for (const k of Object.keys(result)) {
+      if (!allowed.includes(k)) delete result[k];
+    }
+  }
   // Convert empty strings to null (fixes DATE/INTEGER errors in Supabase)
   return cleanForSupabase(result);
 }
@@ -170,7 +198,7 @@ export const db = {
     const supItem = toSupabase(itemData, collection);
     console.log(`[db] CREATE ${collection}:`, JSON.stringify(supItem));
     
-    const data = await supabaseRest('POST', table, supItem, 'select=*');
+    const data = await supabaseWrite('POST', table, supItem, 'select=*');
     const result = Array.isArray(data) ? data[0] : data;
     console.log(`[db] CREATE ${collection} OK:`, result);
     return fromSupabase(result, collection);
@@ -186,7 +214,7 @@ export const db = {
     const supItem = toSupabase(itemData, collection);
     console.log(`[db] UPDATE ${collection} ${id}:`, JSON.stringify(supItem));
     
-    const data = await supabaseRest('PATCH', table, supItem, `id=eq.${id}&select=*`);
+    const data = await supabaseWrite('PATCH', table, supItem, `id=eq.${id}&select=*`);
     const result = Array.isArray(data) ? data[0] : data;
     console.log(`[db] UPDATE ${collection} OK:`, result);
     return fromSupabase(result, collection);
